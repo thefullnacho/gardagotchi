@@ -1,0 +1,25 @@
+# macOS
+.DS_Store
+.AppleDouble
+._*
+
+# ESPHome
+.esphome/
+secrets.yaml
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# 3D printing / CAD
+*.gcode
+*.3mf.bak
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
