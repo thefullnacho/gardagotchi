@@ -10,6 +10,7 @@
 #include <Arduino.h>
 #include <esp_timer.h>
 
+#include "anim.h"
 #include "controls.h"
 #include "display.h"
 #include "sensors.h"
@@ -22,7 +23,8 @@
 namespace {
 constexpr sprites::Palette kPalette = sprites::MINT;  // she picks mint or lilac later
 
-sprites::State shown = sprites::STATE_COUNT;  // nothing drawn yet
+int shown_frame = -1;  // nothing drawn yet
+anim::Player player;
 
 // A millisecond clock that doesn't wrap after 49 days like millis() does.
 int64_t nowMs() { return esp_timer_get_time() / 1000; }
@@ -49,7 +51,7 @@ sprites::State spriteFor(mood::Face f) {
     case mood::Face::Cloudy: return sprites::CLOUDY;
     case mood::Face::Sleeping: return sprites::SLEEPING;
     case mood::Face::Celebrate: return sprites::CELEBRATE;
-    case mood::Face::SleepyLove: return sprites::SLEEPING;  // TODO: needs its own art
+    case mood::Face::SleepyLove: return sprites::SLEEPY_LOVE;
   }
   return sprites::CONTENT;
 }
@@ -64,10 +66,11 @@ void driveLed(mood::Led led) {
 }
 #endif
 
-void show(sprites::State s, bool force = false) {
-  if (s == shown && !force) return;  // only redraw when something changed
-  shown = s;
-  display::drawFace(kPalette, s);
+// Draw a frame, but only if it isn't already on screen (a redraw takes ~25 ms).
+void showFrame(uint16_t f, bool force = false) {
+  if ((int)f == shown_frame && !force) return;
+  shown_frame = f;
+  display::drawFrame(kPalette, f);
 #ifdef GG_CALIBRATE
   char footer[40];
   snprintf(footer, sizeof(footer), "soil %s  lux %s", last.soil_ok ? String(last.moisture).c_str() : "--",
@@ -76,6 +79,11 @@ void show(sprites::State s, bool force = false) {
 #endif
   display::present();
 }
+
+#ifdef GG_CALIBRATE
+// The calibration build shows still faces: each face's first frame.
+void show(sprites::State s, bool force = false) { showFrame(sprites::kClips[s].first, force); }
+#endif
 }  // namespace
 
 void setup() {
@@ -84,7 +92,7 @@ void setup() {
   Serial.println("\ngardagotchi booting");
   controls::begin();
   display::begin();
-  show(sprites::CONTENT);
+  showFrame(sprites::kClips[sprites::CONTENT].first);
   sensors::begin();
 #ifdef GG_CALIBRATE
   calib_log::begin();
@@ -112,7 +120,7 @@ void loop() {
     last_sample_ms = now;
     last = sensors::read();
     calib_log::append(last, "");
-    show(shown, true);  // refresh the footer numbers
+    showFrame(shown_frame, true);  // refresh the footer numbers
   }
   calib_log::pollSerial();
   delay(5);
@@ -136,9 +144,13 @@ void loop() {
   }
 
   mood::Output out = engine.tick(now);
-  sprites::State want = spriteFor(out.face);
-  if (want != shown) Serial.printf("face %d\n", (int)out.face);
-  show(want);
+  static mood::Face last_face = mood::Face::Content;
+  if (out.face != last_face) {
+    Serial.printf("face %d\n", (int)out.face);
+    last_face = out.face;
+  }
+  player.play(&sprites::kClips[spriteFor(out.face)], now);
+  showFrame(player.frame(now));
   driveLed(out.led);
   if (out.sound != mood::Sound::None) {
     // The speaker comes later; for now just say what it would play.

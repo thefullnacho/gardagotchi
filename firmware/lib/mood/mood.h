@@ -16,7 +16,7 @@ namespace mood {
 
 enum class Face : uint8_t {
   Content, Happy, Love, Thirsty, Soggy, Sunny, Cloudy, Sleeping, Celebrate,
-  SleepyLove,  // a press at night. No art yet; the firmware shows Sleeping for now
+  SleepyLove,  // a press at night: one eye peeks open, a small heart
 };
 
 enum class Led : uint8_t {

@@ -103,8 +103,18 @@ and lots of feedback for every action. That's something to build on, with one tr
   Patting or gently tilting the case could make the frog wiggle, with no second
   button. Worth trying once there's a case to hold. Skip it if it muddies "one button".
 
-## Rendering
-Faces are stored at 60x60 with a color table and scaled 4x on the device
-(`faces/export_sprites.py` → `firmware/include/sprites.h`). Each face is drawn into an
-off-screen buffer, then sent to the screen in one go, so there's no flicker. Animation
-frames will slot into the same table later.
+## Rendering and animation
+Each face is three layers in `faces/frog.py`: a backdrop that never moves, the frog,
+and props in front (hearts, drops, clouds, Zs). `ANIM` in frog.py lists each face's
+loop: how far the frog and the props shift on each frame, and for how long. So the frog
+can breathe or bounce while the rainbow stays put, or the Zs drift up while it sleeps.
+
+Blinks are not part of the loop. The firmware (`firmware/lib/anim`) drops a 150 ms
+blink in at random every 2.5 to 6 seconds, for the faces whose eyes are open, so it
+never looks mechanical.
+
+`python3 faces/frog.py` writes previews to `faces/out/anim/` (one GIF per face, plus
+`all_mint.gif` / `all_lilac.gif` with every face playing at once).
+`python3 faces/export_sprites.py` packs every frame for the firmware: 60x60, one byte
+per pixel, scaled 4x on the device, and each frame goes to the screen in one push, so
+there's no flicker. 38 frames x 2 palettes is about 270 KB of the ~6 MB program space.

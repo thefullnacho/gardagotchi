@@ -23,3 +23,15 @@ the collection that compounds (one keepsake per plant that reaches flower).
 
 **[non-production]** (in `~/me/queue.md`): board checks with a multimeter when the
 boards arrive; solder button + LED and first flash; start the calibration week.
+
+## 2026-09-24 (later)
+
+**Changed.** Animation. Each face is now three layers (backdrop, frog, props) with a
+short loop per face in `faces/frog.py` (`ANIM`): breathing, wiggle, sigh, shake-off,
+sway, drifting clouds, rising Zs, a celebration bounce. Random blinks come from the
+new player in `firmware/lib/anim` (6 desktop tests, 25 in total). Added the sleepy-love
+face for a press at night. 38 frames per palette, ~270 KB. Previews look smooth as
+GIFs; **not yet seen on the real screen.**
+
+**Next.** Growth stages (days since planting) and the collection that compounds (one
+keepsake per plant that reaches flower), saved to flash so a power cut loses nothing.

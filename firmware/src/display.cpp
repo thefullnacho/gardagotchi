@@ -70,8 +70,9 @@ void begin() {
   }
 }
 
-void drawFace(sprites::Palette p, sprites::State s) {
-  const uint8_t* px = sprites::kFrames[p][s];
+void drawFrame(sprites::Palette p, uint16_t index) {
+  if (index >= sprites::kFrameCount) index = 0;
+  const uint8_t* px = sprites::kFrames[p][index];
   const uint16_t* colors = sprites::kColors[p];
   for (int y = 0; y < sprites::kH; ++y) {
     for (int x = 0; x < sprites::kW; ++x) {
