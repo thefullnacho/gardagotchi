@@ -1,65 +1,58 @@
 # Gardagotchi
 
-A garden tamagotchi. A little creature in a chunky, colorful case whose mood is driven by
-*real homestead data* — cozy when the greenhouse is warm, thirsty when the rain barrels run
-low, panicking when the wind kicks the greenhouse door open. One big button. Press = love.
+A garden tamagotchi. A pixel-art frog on a round screen that lives beside a real potted
+plant on a windowsill. When the soil dries out, the frog gets thirsty. When she waters
+it, the sensor notices and the frog celebrates on its own. One big button: press = love.
 
-Built by a grandpa, with an AI, for a very smart 4-year-old. The tech stays invisible;
-the creature is the interface.
+Built by a grandpa, with an AI, for a 4-year-old who already knows how seeds grow and is
+building the habit of looking after one. The tech stays invisible; the frog is the
+interface.
 
-Full build spec: [`docs/spec.md`](docs/spec.md)
+Standalone: no WiFi, no server, no app. It reads its own pot and nothing else.
 
-## Structure
+## What's here
 
 ```
 gardagotchi/
-├── esphome/   # device firmware (ESPHome YAML: display, button, buzzer, MQTT)
-├── server/    # mood model + MQTT glue (runs on the homelab, not the device)
-├── faces/     # creature pixel-art for the round display
-├── case/      # 3D print files + print settings (Bambu A1)
-└── docs/      # build guide, spec, notes
+├── firmware/   # PlatformIO + Arduino + LovyanGFX, Waveshare ESP32-S3-LCD-1.28
+│   ├── lib/mood/      # the mood engine (plain C++, tested on the desktop)
+│   ├── src/           # display, button + LED, sensors, calibration logger
+│   └── test/          # mood tests: pio test -e native
+├── faces/      # frog.py draws every face; export_sprites.py feeds the firmware
+├── tools/      # calib_pull.py: copy the calibration log off the board
+└── docs/       # brief, wiring, calibration week, design notes
 ```
-
-## The idea in one paragraph
-
-Cheap ESP32s at the edge do one dumb job well; the brains live on the homelab server.
-The Gardagotchi subscribes to sensor topics over MQTT (greenhouse temp + door, barrel
-levels, soil moisture later) and translates them into a creature's emotions a 4-year-old
-understands. She presses the big button to say hi. The creature asks for things ("the
-flowers are thirsty"), she does them in the real world, the creature celebrates. The
-garden has moods, and she can take care of it.
-
-## Build phases
-
-Each phase is a complete gift. Each upgrade is an event — "it learned about the garden!"
-
-- **Phase 1 — now.** Creature + button + chirps, standalone (no WiFi needed). She names
-  it, learns press = love. A complete toy on day one.
-- **Phase 2 — with the greenhouse monitor.** WiFi + MQTT. Moods from greenhouse temp +
-  door. The wind-blows-the-door-open incident becomes *her* early-warning system:
-  scared face → she runs to tell Grandpa.
-- **Phase 3 — the full network.** Barrels, soil moisture, the quest loop, real-data magic
-  (moisture rises after watering → the creature perks up on its own).
-
-## Parts (~$30)
-
-- ESP32 dev board ×2–3 (spares are cheap insurance)
-- 1.28" round GC9A01 TFT, 240×240 — the creature's face
-- 30 mm arcade button with LED, colorful — the one button
-- Piezo buzzer (5 V) — happy chirps, sad boops
-- Jumper wires, USB-C cable + 5 V wall adapter
-- Case: 3D printed, multicolor — *she* picks the colors
 
 ## Design rules
 
-- Faces, not text. She's 4; emotion is carried by face, color, sound, motion.
-- One button. No menus, no modes.
-- Cause and effect, fast (<1 s). Delayed feedback is no feedback.
-- USB wall power only. No batteries in the toy. All electronics enclosed.
-- It sleeps when she sleeps (~8 PM–7 AM).
-- Mood logic lives on the server, not the device — reflashing a kid's toy to tweak a
-  threshold is nobody's idea of fun.
+- Faces, not text. Game icons (stars, gems) are fine; words are not.
+- One button, and it always answers in under a second.
+- The frog only asks for what she can fix, never at night, and never gets worse for
+  waiting. Negative moods fade on their own. No guilt mechanics.
+- Earn, never lose. Rewards only accumulate; nothing shows a missed day.
+- One celebration per watering, not per pour, so pouring more never earns more.
+- USB wall power only. No batteries. Everything enclosed, rounded, no small parts.
 
-## Status
+## Hardware
 
-🚧 Phase 1 — parts on the shopping list, faces being drawn.
+Waveshare ESP32-S3-LCD-1.28 (round 240x240 GC9A01, onboard IMU), Adafruit STEMMA
+capacitive soil sensor, BH1750 light sensor, MAX98357A amp + 4 ohm speaker, 30 mm LED
+arcade button, printed case (Bambu A1). Pin map and solder checklist:
+[`docs/wiring.md`](docs/wiring.md).
+
+## Build
+
+```
+cd firmware
+pio test -e native                  # mood tests, no hardware needed
+pio run -e frog -t upload           # the frog
+pio run -e calibrate -t upload      # soil + light logging week
+```
+
+## Docs
+
+- [`docs/brief.md`](docs/brief.md): the concept, hardware, and open questions
+- [`docs/firmware-notes.md`](docs/firmware-notes.md): mood layers, night mode, rewards
+- [`docs/calibration.md`](docs/calibration.md): finding the moisture thresholds
+- [`docs/wiring.md`](docs/wiring.md): GPIO map and solder checklist
+- [`STATUS.md`](STATUS.md): where things stand
