@@ -55,3 +55,23 @@ Firmware still waits on the boards for its first real run. After that: the speak
 
 **[non-production]** Buy dwarf French marigold seeds, a small pot with a drainage
 hole, and a saucer (in `~/me/queue.md`).
+
+## 2026-09-24 (wrap)
+
+**Changed.** Nothing further in code since the growth + collection commit. Plant
+confirmed: marigold from the bag in the greenhouse. Pot + saucer on hand (plain pot,
+not self-watering: wicking from below hides her watering from the sensor and the
+frog would never celebrate or get thirsty).
+
+**In flight.** Boards in the mail. Firmware has never run on hardware. Stage timing is
+set for a dwarf French marigold until the bag's numbers come in.
+
+**Next concrete action.** Read the seed bag (type, days to sprout, days to flower),
+send the numbers, set `garden::Config`. Then, when the boards land: the two
+multimeter checks, solder button + LED, first flash.
+
+**[non-production]** Check the marigold seed bag; board checks; solder + first
+flash; start the calibration week. All already in `~/me/queue.md`.
+
+**Spun off.** A character for Alex's own home and garden, reading hestia's watches.
+Separate project, not this repo; stub at `~/hestia-face/README.md`.
