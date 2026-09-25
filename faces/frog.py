@@ -40,7 +40,8 @@ C = dict(white="#FFFFFF", gold="#FFD35C", golddark="#E0A526", gem="#FF4F9A",
 
 BG = dict(content="#E9DDFF", happy="#FFD9EC", love="#FFD0E6", thirsty="#FFF0C9",
           soggy="#CDEBFF", sunny="#FFF1B8", cloudy="#DAD6E6", sleeping="#1E2148",
-          celebrate="#FFE3F4", sleepy_love="#1E2148")
+          celebrate="#FFE3F4", sleepy_love="#1E2148",
+          card_seed="#E9DDFF", card_flower="#FFE3F4")
 
 # ---------- ASCII sprite helper ----------
 def stamp(img, x, y, rows, cmap):
@@ -213,6 +214,8 @@ def _paste(img, lay, dx, dy):
     img[m] = lay[m]
 
 def scene(state, P, dx=0, dy=0, pdx=0, pdy=0, blink=False):
+    if state in CARDS:  # pdy picks the sparkle phase
+        return card(CARDS.index(state), pdy)
     img = base(state)
     asleep = state in ("sleeping", "sleepy_love")
 
@@ -344,6 +347,8 @@ ANIM = {
                                            _f(160, dy=-3), _f(110, dy=-2, pdy=1)]),
     "sleepy_love": dict(blink=False, frames=[_f(500), _f(500, pdy=-1)]),
 }
+for _c in ["card_seed", "card_sprout", "card_leaves", "card_bud", "card_flower"]:
+    ANIM[_c] = dict(blink=False, frames=[_f(300), _f(300, pdy=1)])  # sparkles twinkle
 
 def frames(state, P):
     """The loop frames for a state, as (image, ms) pairs."""
@@ -385,6 +390,58 @@ def plant(stage):
         stamp(im, 10, 1, flower, {"#": "#FF6FA8", "o": C["gold"]})
     return im
 
+# ---------- the collection: a flower bed at the frog's feet ----------
+# Every plant she grows to flower adds one flower here, for good. Drawn by the
+# firmware on top of every frog face (not on the plant cards), dimmed at night.
+FLOWER = [".p.p.",
+          "ppopp",
+          ".p.p.",
+          "..s..",
+          ".ls..",
+          "..s.."]
+BED_SLOTS = [(27, 50), (20, 49), (34, 49), (13, 46), (41, 46),   # centre out, then up the sides
+             (8, 40), (46, 40), (5, 33), (50, 33)]
+PETALS = ["#FF6FA8", "#FFE066", "#B07CFF", "#FFB347", "#6EC6FF",
+          "#FF6B6B", "#FFFFFF", "#FF8DB9", "#9DE6D2"]
+FLOWER_PARTS = dict(o=C["gold"], s="#4FB564", l="#6BD66B")
+DIM = 0.78
+
+def _inside(x, y):
+    return (x + .5 - 30) ** 2 + (y + .5 - 30) ** 2 <= 29.5 ** 2
+for _x, _y in BED_SLOTS:  # every flower pixel must land on the round screen
+    for _j, _row in enumerate(FLOWER):
+        for _i, _ch in enumerate(_row):
+            assert _ch == "." or _inside(_x + _i, _y + _j), (_x, _y)
+
+def flower_bed(img, n, dim=False):
+    for i, (x, y) in enumerate(BED_SLOTS[:n]):
+        cmap = dict(p=PETALS[i % len(PETALS)], **FLOWER_PARTS)
+        if dim:
+            cmap = {k: "#%02X%02X%02X" % tuple(int(c * DIM) for c in hexc(v)) for k, v in cmap.items()}
+        stamp(img, x, y, FLOWER, cmap)
+    return img
+
+CARDS = ["card_seed", "card_sprout", "card_leaves", "card_bud", "card_flower"]
+
+def card(stage, phase=0):
+    """The surprise card: her plant, big, with twinkling sparkles. Blooming adds confetti."""
+    bloom = stage == 4
+    bg = hexc(BG["card_flower"] if bloom else BG["card_seed"])
+    img = np.zeros((N, N, 3), np.uint8); img[:] = bg
+    pl = plant(stage).repeat(2, 0).repeat(2, 1)  # 24x24 -> 48x48
+    pl[(pl == hexc(PLANT_BG)).all(-1)] = bg
+    img[4:52, 6:54] = pl
+    spots = [[(8, 14), (47, 20), (12, 34), (44, 40)], [(14, 8), (48, 30), (6, 24), (40, 12)]]
+    for (x, y) in spots[phase % 2]:
+        stamp(img, x, y, SPARK, {"#": C["gold"]})
+    if bloom:
+        conf = [(10, 20, "red"), (48, 16, "blue"), (16, 44, "green"), (46, 46, "purple"),
+                (22, 8, "yellow"), (38, 6, "hot"), (5, 32, "orange"), (53, 34, "pink")]
+        for x, y, c in conf:
+            y2 = y + (1 if phase % 2 else 0)
+            img[y2:y2 + 2, x:x + 2] = hexc(C[c])
+    return img
+
 def upscale(img, s):
     return Image.fromarray(img).resize((img.shape[1] * s, img.shape[0] * s), Image.NEAREST)
 
@@ -396,11 +453,13 @@ def round_mask(im):
     return out
 
 STATES = ["content", "happy", "love", "thirsty", "soggy", "sunny", "cloudy", "sleeping", "celebrate",
-          "sleepy_love"]
+          "sleepy_love", "card_seed", "card_sprout", "card_leaves", "card_bud", "card_flower"]
 LABEL = dict(content="content (idle)", happy="happy", love="love (button press)",
              thirsty="thirsty (soil dry)", soggy="soggy (too much water)", sunny="sunny (basking)",
              cloudy="cloudy / gray day", sleeping="sleeping (night)", celebrate="celebrate (just watered!)",
-             sleepy_love="sleepy love (press at night)")
+             sleepy_love="sleepy love (press at night)", card_seed="surprise: seed",
+             card_sprout="surprise: sprout", card_leaves="surprise: leaves", card_bud="surprise: bud",
+             card_flower="surprise: bloomed!")
 
 if __name__ == "__main__":
     out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out")

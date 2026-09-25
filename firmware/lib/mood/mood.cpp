@@ -110,13 +110,21 @@ void Engine::onPress(int64_t now_ms) {
   bumpAffection(now_ms, cfg_.love_bump);
 }
 
+void Engine::reveal(int64_t now_ms) {
+  reaction_ = Face::PlantCard;
+  reaction_until_ = now_ms + cfg_.reveal_ms;
+  pending_sound_ = Sound::Fanfare;
+  bumpAffection(now_ms, cfg_.love_bump);
+}
+
 Output Engine::tick(int64_t now_ms) {
   Output out;
   bool reacting = reaction_until_ >= 0 && now_ms < reaction_until_;
   out.face = reacting ? reaction_ : moodFace(now_ms);
   if (reacting) out.led = Led::Excited;
   else if (asleep_) out.led = Led::Off;
-  else if (out.face == Face::Thirsty) out.led = Led::Asking;
+  else if (out.face == Face::Thirsty) out.led = Led::Asking;  // water comes first
+  else if (surprise_) out.led = Led::Surprise;
   else out.led = Led::Calm;
   out.sound = pending_sound_;
   pending_sound_ = Sound::None;

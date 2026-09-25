@@ -268,6 +268,29 @@ void test_missing_light_sensor_stays_awake() {
   TEST_ASSERT_FALSE(sim.engine.asleep());
 }
 
+void test_reveal_shows_the_plant_card_with_fanfare() {
+  Sim sim;
+  sim.engine.reveal(sim.now);
+  auto out = sim.tick();
+  TEST_ASSERT_EQUAL(Face::PlantCard, out.face);
+  TEST_ASSERT_EQUAL(Sound::Fanfare, out.sound);
+  sim.now += 6 * kSec;
+  TEST_ASSERT_NOT_EQUAL(Face::PlantCard, sim.face());
+}
+
+void test_surprise_twinkles_but_water_comes_first() {
+  Sim sim;
+  sim.engine.setSurpriseWaiting(true);
+  TEST_ASSERT_EQUAL(Led::Surprise, sim.tick().led);
+  sim.s.moisture = 300;
+  sim.wait(1 * kMin);
+  TEST_ASSERT_EQUAL(Led::Asking, sim.tick().led);  // thirsty wins
+  sim.s.moisture = 600;
+  sim.s.lux = 1;
+  sim.wait(15 * kMin);
+  TEST_ASSERT_EQUAL(Led::Off, sim.tick().led);  // never at night
+}
+
 }  // namespace
 
 void setUp() {}
@@ -294,5 +317,7 @@ int main() {
   RUN_TEST(test_sunny_and_cloudy);
   RUN_TEST(test_broken_soil_sensor_never_asks);
   RUN_TEST(test_missing_light_sensor_stays_awake);
+  RUN_TEST(test_reveal_shows_the_plant_card_with_fanfare);
+  RUN_TEST(test_surprise_twinkles_but_water_comes_first);
   return UNITY_END();
 }

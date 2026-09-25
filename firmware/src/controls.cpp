@@ -48,4 +48,12 @@ void breatheLed(uint32_t period_ms) {
   setLed(0.08f + 0.92f * (0.5f - 0.5f * cosf(phase * 2 * PI)));
 }
 
+void twinkleLed() {
+  uint32_t t = millis() % 2000;
+  bool on = t < 120 || (t >= 240 && t < 360);
+  setLed(on ? 1.0f : 0.1f);
+}
+
+bool held() { return digitalRead(PIN_BUTTON) == LOW; }
+
 }  // namespace controls

@@ -10,4 +10,8 @@ bool pressed();
 void setLed(float level);
 // Slow "breathing" pulse; call every loop. period_ms = one full breath.
 void breatheLed(uint32_t period_ms);
+// Two quick twinkles every two seconds: "something new is waiting". Call every loop.
+void twinkleLed();
+// True while the button is held down right now (debounce not needed for long holds).
+bool held();
 }  // namespace controls

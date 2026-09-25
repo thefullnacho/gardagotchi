@@ -104,6 +104,24 @@ def main():
             L.append("    },")
         L.append("  },")
     L.append("};")
+    # The flower bed (the collection), drawn by the firmware on top of frog faces.
+    def dimmed(h):
+        return rgb565(*(int(c * frog.DIM) for c in frog.hexc(h)))
+    L.append("// Flower bed: one flower per keepsake, in slot order. '.' = transparent,")
+    L.append("// 'p' petal (per-flower color), 'o' center, 's' stem, 'l' leaf.")
+    L.append(f"constexpr int kFlowerW = {len(frog.FLOWER[0])};")
+    L.append(f"constexpr int kFlowerH = {len(frog.FLOWER)};")
+    L.append("static const char* const kFlower[kFlowerH] = {" + ", ".join(f'"{r}"' for r in frog.FLOWER) + "};")
+    L.append(f"constexpr int kBedSlots = {len(frog.BED_SLOTS)};")
+    L.append("static const uint8_t kBedXY[kBedSlots][2] = {" + ", ".join(f"{{{x}, {y}}}" for x, y in frog.BED_SLOTS) + "};")
+    L.append("static const uint16_t kPetal[kBedSlots] = {" + ", ".join(f"0x{rgb565(*frog.hexc(h)):04X}" for h in frog.PETALS) + "};")
+    L.append("static const uint16_t kPetalDim[kBedSlots] = {" + ", ".join(f"0x{dimmed(h):04X}" for h in frog.PETALS) + "};")
+    parts = frog.FLOWER_PARTS
+    L.append("// center, stem, leaf; then the same dimmed for night")
+    L.append("static const uint16_t kFlowerParts[2][3] = {" +
+             f"{{0x{rgb565(*frog.hexc(parts['o'])):04X}, 0x{rgb565(*frog.hexc(parts['s'])):04X}, 0x{rgb565(*frog.hexc(parts['l'])):04X}}}, "
+             f"{{0x{dimmed(parts['o']):04X}, 0x{dimmed(parts['s']):04X}, 0x{dimmed(parts['l']):04X}}}}};")
+    L.append("")
     L.append("}  // namespace sprites")
     L.append("")
 

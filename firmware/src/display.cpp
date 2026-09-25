@@ -81,6 +81,23 @@ void drawFrame(sprites::Palette p, uint16_t index) {
   }
 }
 
+void drawFlowerBed(int n, bool night) {
+  if (n > sprites::kBedSlots) n = sprites::kBedSlots;  // bed full: see firmware-notes
+  const uint16_t* parts = sprites::kFlowerParts[night ? 1 : 0];
+  for (int i = 0; i < n; ++i) {
+    uint16_t petal = night ? sprites::kPetalDim[i] : sprites::kPetal[i];
+    int x0 = sprites::kBedXY[i][0], y0 = sprites::kBedXY[i][1];
+    for (int j = 0; j < sprites::kFlowerH; ++j) {
+      for (int k = 0; k < sprites::kFlowerW; ++k) {
+        char ch = sprites::kFlower[j][k];
+        if (ch == '.') continue;
+        uint16_t c = ch == 'p' ? petal : ch == 'o' ? parts[0] : ch == 's' ? parts[1] : parts[2];
+        frame.fillRect((x0 + k) * kScale, (y0 + j) * kScale, kScale, kScale, c);
+      }
+    }
+  }
+}
+
 void drawFooter(const char* text) {
   frame.setTextDatum(textdatum_t::bottom_center);
   frame.setTextColor(TFT_WHITE, TFT_BLACK);

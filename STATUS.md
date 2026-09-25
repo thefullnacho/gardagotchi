@@ -35,3 +35,23 @@ GIFs; **not yet seen on the real screen.**
 
 **Next.** Growth stages (days since planting) and the collection that compounds (one
 keepsake per plant that reaches flower), saved to flash so a power cut loses nothing.
+
+## 2026-09-24 (evening)
+
+**Changed.** Growth and the collection (`firmware/lib/garden`, 16 tests; 43 in total).
+A day is one sleep (dawns counted, lamp-proof). Growth waits when the plant was thirsty
+nearly all day, never goes back. A new stage is a surprise: the LED twinkles and her
+next press shows the plant card. Each plant that blooms becomes a flower in the frog's
+garden, saved to flash. Grown-up replant: hold the button while plugging in, 3 s.
+
+**Decided.** The plant appears only on the surprise card, so the real pot stays the
+plant she watches. The collection is a flower bed at the frog's feet (9 spots), not
+crown gems. Stage timing set for a dwarf French marigold (beans dropped: climbing,
+and she loves flowers).
+
+**Next.** Idea logged: a full round (9 flowers) changes the background for good.
+Firmware still waits on the boards for its first real run. After that: the speaker
+(voice clips), then the case.
+
+**[non-production]** Buy dwarf French marigold seeds, a small pot with a drainage
+hole, and a saucer (in `~/me/queue.md`).

@@ -103,6 +103,38 @@ and lots of feedback for every action. That's something to build on, with one tr
   Patting or gently tilting the case could make the frog wiggle, with no second
   button. Worth trying once there's a case to hold. Skip it if it muddies "one button".
 
+## Growth and the collection (built 2026-09-24 in `firmware/lib/garden`)
+
+- **A day is one sleep.** No clock, so the frog counts dawns. Dawns less than 20 hours
+  apart don't count, so a lamp at night can't add a day. The first dawn after a power
+  cut always counts. Without a light sensor it counts 24 hours awake as a day.
+- **Growth waits, never goes back.** A day counts unless the plant was thirsty for 90%
+  of it. Watering by the afternoon is plenty. (`growth_needs_care = false` switches to
+  plain days since planting.)
+- **Stages** (seed, sprout, leaves, bud, flower) come from growth days. The numbers in
+  `garden::Config` are set for a dwarf French marigold (the chosen direction:
+  big easy seeds, no trellis, flowers in ~7 weeks); adjust from the actual packet.
+  The virtual plant can drift from the real one; stages are coarse on purpose.
+- **Surprises.** A new stage waits for her next press (while awake): the LED twinkles,
+  and the press shows the plant card with a fanfare instead of hearts. It waits as long
+  as she takes. Water still comes first on the LED.
+- **The plant lives on the surprise card only** (decided 2026-09-24). The frog screen
+  doesn't show a second plant, so the real pot on the windowsill stays the plant she
+  watches. The card is the moment the screen shows her what's happening in it.
+- **Keepsakes are flowers in the frog's garden** (decided 2026-09-24): each plant she
+  grows to flower becomes a flower at the frog's feet, drawn over every frog face (not
+  the cards) and dimmed at night. They fill from the center out, then up the sides,
+  until they frame the frog. There are 9 spots.
+- **A full round** (idea, 2026-09-24, not built): when the ninth flower blooms, the
+  background changes for good to mark the completed round. Additive: the nine flowers
+  become part of the new background (a meadow, say) rather than disappearing, and the
+  next round's flowers grow in front. At ~6 plants a year this is a while off.
+  Each plant that blooms adds one, once, forever. The first power-on
+  plants her first seed and shows it on her first press (the naming-ceremony moment).
+- **Replanting** is a grown-up gesture: hold the button while plugging in, 3 seconds.
+  Growth restarts; keepsakes are kept.
+- Everything above is saved to flash on each change (about once a day).
+
 ## Rendering and animation
 Each face is three layers in `faces/frog.py`: a backdrop that never moves, the frog,
 and props in front (hearts, drops, clouds, Zs). `ANIM` in frog.py lists each face's

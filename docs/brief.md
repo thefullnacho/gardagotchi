@@ -34,5 +34,5 @@ This brief replaces the original concept (ESPHome, MQTT, greenhouse moods, piezo
 ## Open questions
 - Moisture thresholds: log a week of readings from a test pot while watering normally, then set dry/happy/soggy from the data (`calibration.md`).
 - Night mode: DECIDED 2026-09-24, light-based. "The frog follows the sun" is an idea she can hold. Expect trial and error once she uses it.
-- Scene layout: where the plant stage appears relative to the frog on the round screen.
+- Scene layout: DECIDED 2026-09-24. The plant appears only on the surprise card when it grows; the collection is a flower bed at the frog's feet (see `firmware-notes.md`).
 - Case: Waveshare publishes a 3D model of the board. Display recessed behind a printed bezel with a clear cover; the 30mm button hole dominates one face. Electronics away from the pot (she will overwater), accessible with 4 screws, USB cable strain-relieved.

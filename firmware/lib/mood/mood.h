@@ -17,6 +17,7 @@ namespace mood {
 enum class Face : uint8_t {
   Content, Happy, Love, Thirsty, Soggy, Sunny, Cloudy, Sleeping, Celebrate,
   SleepyLove,  // a press at night: one eye peeks open, a small heart
+  PlantCard,   // the plant grew: her press reveals the new stage (firmware picks the art)
 };
 
 enum class Led : uint8_t {
@@ -24,6 +25,7 @@ enum class Led : uint8_t {
   Calm,     // slow breath
   Asking,   // faster pulse: "come see me" (thirsty)
   Excited,  // quick flutter during a reaction
+  Surprise, // twinkle: something new is waiting for her press
 };
 
 enum class Sound : uint8_t { None, Chirp, Fanfare };
@@ -55,6 +57,7 @@ struct Config {
   int64_t love_ms = 3000;
   int64_t sleepy_love_ms = 2000;
   int64_t celebrate_ms = 6000;
+  int64_t reveal_ms = 5000;
 
   // Affection: button presses and waterings fill it, it fades by itself.
   float love_bump = 0.25f;
@@ -84,6 +87,10 @@ class Engine {
   void onSensors(int64_t now_ms, const Sensors& s);
   // The button went down.
   void onPress(int64_t now_ms);
+  // The button went down and a surprise was waiting: show the plant card instead of love.
+  void reveal(int64_t now_ms);
+  // Something new is waiting for her press (the LED twinkles while awake).
+  void setSurpriseWaiting(bool waiting) { surprise_ = waiting; }
   // Call every loop. Times are milliseconds from any steady clock.
   Output tick(int64_t now_ms);
 
@@ -127,6 +134,7 @@ class Engine {
   int64_t affection_at_ = 0;
 
   Sound pending_sound_ = Sound::None;
+  bool surprise_ = false;
 };
 
 }  // namespace mood

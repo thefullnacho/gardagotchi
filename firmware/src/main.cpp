@@ -1,8 +1,11 @@
 // Gardagotchi.
 //
-// env:frog       the frog, driven by the mood engine (lib/mood). Reads soil + light every
-//                few seconds; the button always gets a reaction; the LED breathes calmly,
-//                pulses faster when thirsty, and is off while the frog sleeps.
+// env:frog       the frog, driven by the mood engine (lib/mood) and the garden
+//                (lib/garden). Reads soil + light every few seconds; the button always
+//                gets a reaction; the LED breathes calmly, pulses faster when thirsty,
+//                twinkles when a surprise is waiting, and is off while the frog sleeps.
+//                Grown-up gesture: hold the button while plugging in, for 3 seconds,
+//                to plant a new seed (the collection is kept).
 // env:calibrate  logging week: a soil + light reading every minute, printed to serial
 //                and saved to flash. Press the button when you water the test pot:
 //                that writes a "watered" marker row and shows the celebrate face.
@@ -17,6 +20,8 @@
 #ifdef GG_CALIBRATE
 #include "calib_log.h"
 #else
+#include "garden.h"
+#include "garden_store.h"
 #include "mood.h"
 #endif
 
@@ -25,6 +30,11 @@ constexpr sprites::Palette kPalette = sprites::MINT;  // she picks mint or lilac
 
 int shown_frame = -1;  // nothing drawn yet
 anim::Player player;
+int bed_flowers = 0;   // her collection, drawn over frog faces
+bool bed_night = false;
+int shown_bed = -1;
+
+void showFrame(uint16_t f, bool force = false);
 
 // A millisecond clock that doesn't wrap after 49 days like millis() does.
 int64_t nowMs() { return esp_timer_get_time() / 1000; }
@@ -37,7 +47,10 @@ uint32_t last_sample_ms = 0;
 uint32_t reaction_until = 0;
 #else
 constexpr int64_t kSenseEveryMs = 5000;
+constexpr uint32_t kReplantHoldMs = 3000;
 mood::Engine engine;
+garden::Garden plant;
+bool light_ok = false;
 int64_t last_sense_ms = -kSenseEveryMs;
 
 sprites::State spriteFor(mood::Face f) {
@@ -52,6 +65,7 @@ sprites::State spriteFor(mood::Face f) {
     case mood::Face::Sleeping: return sprites::SLEEPING;
     case mood::Face::Celebrate: return sprites::CELEBRATE;
     case mood::Face::SleepyLove: return sprites::SLEEPY_LOVE;
+    case mood::Face::PlantCard: return (sprites::State)(sprites::CARD_SEED + (int)plant.stage());
   }
   return sprites::CONTENT;
 }
@@ -62,15 +76,37 @@ void driveLed(mood::Led led) {
     case mood::Led::Calm: controls::breatheLed(4000); break;
     case mood::Led::Asking: controls::breatheLed(1200); break;
     case mood::Led::Excited: controls::breatheLed(400); break;
+    case mood::Led::Surprise: controls::twinkleLed(); break;
   }
+}
+
+// Grown-up gesture at power-on: button held for 3 s plants a new seed.
+void checkReplantGesture() {
+  if (!controls::held()) return;
+  uint32_t start = millis();
+  while (controls::held() && millis() - start < kReplantHoldMs) {
+    controls::setLed(1.0f);
+    delay(10);
+  }
+  if (millis() - start >= kReplantHoldMs) {
+    plant.replant();
+    garden_store::save(plant.saved());
+    Serial.println("garden: new seed planted");
+    showFrame(sprites::kClips[sprites::CARD_SEED].first);
+  }
+  while (controls::held()) delay(10);  // don't count this hold as a press
+  controls::setLed(0);
 }
 #endif
 
 // Draw a frame, but only if it isn't already on screen (a redraw takes ~25 ms).
-void showFrame(uint16_t f, bool force = false) {
-  if ((int)f == shown_frame && !force) return;
+void showFrame(uint16_t f, bool force) {
+  int bed = bed_flowers * 2 + (bed_night ? 1 : 0);
+  if ((int)f == shown_frame && bed == shown_bed && !force) return;
   shown_frame = f;
+  shown_bed = bed;
   display::drawFrame(kPalette, f);
+  if (bed_flowers > 0) display::drawFlowerBed(bed_flowers, bed_night);
 #ifdef GG_CALIBRATE
   char footer[40];
   snprintf(footer, sizeof(footer), "soil %s  lux %s", last.soil_ok ? String(last.moisture).c_str() : "--",
@@ -94,6 +130,10 @@ void setup() {
   display::begin();
   showFrame(sprites::kClips[sprites::CONTENT].first);
   sensors::begin();
+#ifndef GG_CALIBRATE
+  plant = garden::Garden(garden::Config(), garden_store::load());
+  checkReplantGesture();
+#endif
 #ifdef GG_CALIBRATE
   calib_log::begin();
   last = sensors::read();
@@ -130,7 +170,15 @@ void loop() {
   int64_t now = nowMs();
 
   // Button first, so a press is answered on this very loop.
-  if (controls::pressed()) engine.onPress(now);
+  if (controls::pressed()) {
+    if (!engine.asleep() && plant.revealWaiting()) {
+      plant.takeReveal();  // the plant card for its current stage
+      garden_store::save(plant.saved());
+      engine.reveal(now);
+    } else {
+      engine.onPress(now);
+    }
+  }
 
   if (now - last_sense_ms >= kSenseEveryMs) {
     last_sense_ms = now;
@@ -140,8 +188,14 @@ void loop() {
     s.moisture = r.moisture;
     s.light_ok = r.light_ok;
     s.lux = r.lux;
+    light_ok = r.light_ok;
     engine.onSensors(now, s);
   }
+
+  if (plant.update(now, engine.asleep(), engine.thirsty(), light_ok)) {
+    garden_store::save(plant.saved());
+  }
+  engine.setSurpriseWaiting(plant.revealWaiting());
 
   mood::Output out = engine.tick(now);
   static mood::Face last_face = mood::Face::Content;
@@ -149,6 +203,9 @@ void loop() {
     Serial.printf("face %d\n", (int)out.face);
     last_face = out.face;
   }
+  bool on_card = out.face == mood::Face::PlantCard;
+  bed_flowers = on_card ? 0 : plant.saved().keepsakes;  // the card is the plant itself
+  bed_night = out.face == mood::Face::Sleeping || out.face == mood::Face::SleepyLove;
   player.play(&sprites::kClips[spriteFor(out.face)], now);
   showFrame(player.frame(now));
   driveLed(out.led);
