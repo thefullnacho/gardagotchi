@@ -144,7 +144,8 @@ is 3.3 V both ways.
 - [ ] **BCLK** → **GPIO17**, **LRC** → **GPIO18**, **DIN** → **GPIO21**
 - [ ] **GAIN**: tie to **VIN** for the quietest fixed gain (6 dB). This is a kid's toy near her ears; volume can go up in software, not down in hardware
 - [ ] **SD**: leave unconnected (mono, amp on)
-- [ ] Speaker + / − to the amp's output terminals (4 Ω)
+- [ ] Speaker + / − to the amp's output terminals: a small 8 Ω speaker (28 to 40 mm). It
+  draws less from the battery than 4 Ω and is plenty loud near her ears
 
 ### Power
 - 3.7V LiPo into the **MX1.25** header. The onboard charger tops it up over USB-C.

@@ -17,7 +17,7 @@ This brief replaces the original concept (ESPHome, MQTT, greenhouse moods, piezo
 - CC1101 915 MHz module on SPI (SCK 13, MISO 14, MOSI 4, CS 5, GDO0 2), hearing the Ecowitt WH51 in her pot. WH51 runs a year on its AA battery; no soil node to build, power, or weatherproof. Filter by her pot's sensor ID so the frog ignores the bed sensors.
 - 3.7V LiPo into the MX1.25 header; onboard charger tops it up over USB-C. Check polarity before the first plug-in.
 - BH1750 light sensor (I2C)
-- MAX98357A I2S amp + small 4Ω speaker, for voice clips recorded in Grandpa's voice
+- MAX98357A I2S amp + a small 8 Ω speaker (about 28 to 40 mm, 0.5 to 1 W), for voice clips recorded in Grandpa's voice. The 3" 4 Ω speakers on the bench are too big for a frog she carries
 - Adafruit 30mm yellow LED arcade button (#3488). LEDs need 5V: driven via PN2222 NPN (GPIO → 1k → base, emitter → GND, collector → LED−, LED+ → 5V). PWM on that GPIO pulses the LED. VSYS is USB-only per the schematic, so on battery the LED (and the amp) run from the battery + lead instead; wiring.md check 2 confirms it.
 - Printed case on a Bambu A1 (multicolor). Room for the LiPo, CC1101 + antenna placement away from the battery.
 - GPIO map: see `wiring.md`.

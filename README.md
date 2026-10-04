@@ -39,7 +39,7 @@ gardagotchi/
 
 Waveshare ESP32-S3-LCD-1.28 (round 240x240 GC9A01, onboard IMU), CC1101 915 MHz module
 (SPI) hearing an Ecowitt WH51 soil sensor in her pot, BH1750 light sensor, MAX98357A amp
-+ 4 ohm speaker, 30 mm LED arcade button, 3.7V LiPo on the MX1.25 header (charges over
++ a small 8 ohm speaker, 30 mm LED arcade button, 3.7V LiPo on the MX1.25 header (charges over
 USB-C), printed case (Bambu A1). Pin map and solder checklist:
 [`docs/wiring.md`](docs/wiring.md).
 
