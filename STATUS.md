@@ -1,5 +1,26 @@
 # Status
 
+## 2026-10-03
+
+**Changed.** Architecture pivot: the frog is portable and battery-powered now. Soil
+moisture comes from the Ecowitt WH51 already in the beds (and already in HA), heard
+directly over 915 MHz by a CC1101 module on SPI — no DIY soil node to build, power, or
+weatherproof, and no gateway needed on the frog. 3.7V LiPo into the MX1.25 header; the
+onboard charger tops it up over USB-C. The wired STEMMA soil sensor is out (bench
+spare). BH1750 stays for the light-based night mode. Docs updated to match: README,
+brief, wiring, calibration.
+
+**Decided.** CC1101 on SPI: SCK 13, MISO 14, MOSI 4, CS 5, GDO0 2 (all confirmed free;
+15/16/17 stay with button, LED, speaker amp). WH51 filtered by sensor ID so the frog
+hears her pot, not the beds. WH51 reports moisture as 0–100%, so thresholds start from
+HA history instead of a from-scratch calibration week.
+
+**Open.** Button LED + speaker amp want 5 V (VSYS), which may be USB-only. Check 2 in
+wiring.md will tell us on the real board; fallback is 3V3 (dimmer LED) or a boost.
+
+**Next.** Buy CC1101 module + LiPo; breadboard the frog (board + CC1101 + LiPo); port
+the WH51 decoder; first 915 MHz packet on the serial monitor. Then the enclosure.
+
 ## 2026-09-24
 
 **Changed.** Direction reset: standalone frog reading its own pot (soil + light), not
