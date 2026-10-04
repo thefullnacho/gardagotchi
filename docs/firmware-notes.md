@@ -176,6 +176,23 @@ it. The WH51 in her pot, heard over 915 MHz, lets the frog go where she goes.
   "hold the button while plugging in" stops working. Proposal: hold the button for
   10 seconds while it sits on the lily pad.
 
+## Later: NFC taps around the house (idea, 2026-10-04, beyond the MVP)
+
+She carries the frog to a printed object with an NFC tag inside and taps it: a toothbrush
+holder, the shoe shelf, the watering can. It fits the portable frog, since she brings the
+frog to the thing.
+
+- **Hardware:** a PN532 reader on the I2C bus the BH1750 already uses (GPIO6/7), so no new
+  pins (an IRQ line, if wanted, can take a spare: 38, 39, 41, 42). It reads NTAG213/215
+  stickers and discs, which can be dropped into a print by pausing it at a layer. The
+  case needs room for the reader's antenna flat against one face, away from the LiPo
+  and the speaker magnet. Its RF field draws real current, so it should only listen
+  while the frog is awake and being held.
+- **The guard:** taps are earn-only. A tap can add to her collection or set off a reaction,
+  but the frog never asks for a chore and nothing shows a missed one. The plant stays the
+  only thing the frog asks for; otherwise it turns into a nag.
+- Nothing to buy or build for it now. The one cost today is leaving room in the case.
+
 ## Rendering and animation
 Each face is three layers in `faces/frog.py`: a backdrop that never moves, the frog,
 and props in front (hearts, drops, clouds, Zs). The frog is a cell of hand-painted art

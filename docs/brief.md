@@ -35,7 +35,7 @@ This brief replaces the original concept (ESPHome, MQTT, greenhouse moods, piezo
 
 ## Firmware direction
 - Arduino framework via PlatformIO, LovyanGFX. Not ESPHome.
-- WH51 decoder: port from rtl_433's Ecowitt implementation; CC1101 via SPI, GDO0 as packet interrupt. WH51 transmits ~every 70 s.
+- WH51 decoder: written from the protocol notes, not ported from rtl_433 (rtl_433 is GPL-2.0; decided 2026-10-04), so the same decoder can be reused in hestia as a cheap 915 MHz receiver. CC1101 via SPI, GDO0 as packet interrupt. WH51 transmits ~every 70 s.
 - State precedence (original): sleeping > soggy > thirsty > celebrate > love > sunny > cloudy > happy > content. Replaced by a two-layer mood + reaction model, see `firmware-notes.md`.
 - Button press = love (hearts, chirp, small mood bump that decays over hours).
 - Growth stages: based on days since planting to start, not watering totals.
