@@ -1,34 +1,36 @@
-# Calibration week: finding the moisture thresholds
+# Calibration: finding the moisture thresholds
 
-Goal: a week of soil + light readings from a test pot while you water the way you
-normally would. From that we set three numbers: when the frog gets **thirsty**, the
-**happy** range, and when it's **soggy**.
+Goal: pick three numbers from real data — when the frog gets **thirsty**, the **happy**
+range, and when it's **soggy**. The WH51 reports soil moisture as 0–100% directly, and
+the beds have been logging WH51 history into HA for a while, so thresholds start from
+that history and get tuned by watching her pot.
 
 ## Setup
-1. Wire the soil sensor and BH1750 (`wiring.md`, group 3).
-2. Flash the logger:
+1. Put the WH51 in her pot, probe fully in the soil. It runs about a year on its AA
+   battery; nothing to wire on this side.
+2. Wire the CC1101 to the frog (`wiring.md`, group 4) and flash the logger:
    ```
    cd firmware
    pio run -e calibrate -t upload
    pio device monitor
    ```
-   You should see `sensors: soil found, light found` and a CSV line every minute.
-   The screen shows the frog with the live numbers underneath.
-3. Push the soil sensor into the test pot up to the line on the board. The white
-   electronics end stays **above** the soil.
+   You should see `radio: WH51 found` and a row every time her sensor transmits
+   (~every 70 s), plus the BH1750 light line every minute. The screen shows the frog
+   with the live numbers underneath.
+3. Note her pot's WH51 sensor ID from the first `radio` line and set it in the
+   firmware so the frog ignores the bed sensors.
 4. Put the BH1750 where her real one will go, facing the same way, so the light numbers
    mean the same thing later.
-5. Move it to the wall adapter and **write down the time you plug it in**. The board
-   has no clock, so rows are counted in seconds since power-on. The daily light curve
-   will also show sunrise, which gives a second way to line the times up.
 
 ## During the week
 - **Press the button every time you water.** It logs a `watered` row and the frog
   celebrates. Those markers are what make the data readable.
 - Water when you'd normally water, including once when it's properly dry, so we see
   "thirsty". If you can spare it, overwater once so we see "soggy" too.
-- Logging runs once a minute; a week is about 10,000 rows (~400 KB). The flash holds months.
 - A power cut is fine: the log survives and the next rows start a new `boot` number.
+- Cross-check against HA: the beds' WH51 history already shows what "dry" and "soaked"
+  read as percentages, which gives the first threshold guesses before her week's data
+  lands.
 
 ## Getting the data off
 Plug the board into the computer and run:
@@ -43,10 +45,10 @@ It saves `data/calib-<date>.csv` and doesn't erase anything on the board. Or, in
 |---|---|
 | boot | increments on every power-up |
 | uptime_s | seconds since that power-up |
-| unix_time | real time if the clock was set this boot, else 0 |
-| moisture | raw capacitive reading. Roughly 200 in dry air to 2000 in water; soil sits between |
-| soil_temp_c | the sensor chip's temperature (approximate) |
+| moisture_pct | WH51 soil moisture, 0–100% |
+| soil_temp_c | WH51 soil temperature |
 | lux | light level. Stops at about 54,600 (direct sun hits that ceiling; fine for now) |
+| rssi | 915 MHz signal strength, for antenna/range sanity |
 | event | `boot`, `watered`, or blank |
 
 Then hand me the CSV and I'll plot it and propose the thresholds.
