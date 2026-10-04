@@ -134,9 +134,11 @@ is 3.3 V both ways.
 - [ ] CC1101 **VCC** → **3V3**, **GND** → **GND**
 - [ ] **SCK** → **GPIO13**, **MISO** → **GPIO14**, **MOSI** → **GPIO4**
 - [ ] **CS** → **GPIO5**, **GDO0** → **GPIO2**
-- [ ] Keep the spring antenna clear of the case walls and away from the LiPo.
-  A 915 MHz whip is a later upgrade if range disappoints; the stock spring hears
-  the garden fine.
+- [ ] The module (ELECHOUSE 915 MHz) has an SMA jack and a rubber antenna that is too
+  long to hide. Nothing may stick out of a toy she carries, so the antenna goes inside
+  the case: an 8.2 cm wire (a quarter wave at 915 MHz) soldered to the SMA center pin,
+  run along the inside wall, away from the LiPo and the speaker magnet. The `rssi`
+  column in the calibration log shows whether range is enough.
 
 ### 5. Speaker amp (wire now; firmware for sound comes later)
 - [ ] MAX98357A **VIN** → **VSYS** for bench testing on USB; the battery + lead once
