@@ -1,5 +1,33 @@
 # Status
 
+## 2026-10-04 (later)
+
+**Changed.** The frog runs on its own battery: a MakerHawk 3000 mAh 1S LiPo already on
+hand, 1.25 mm plug, polarity checked with a borrowed Fluke (red lands on +), protection
+board present. A second one is the spare. The parts inventory now lives in the Forager
+wiki (`entities/parts-inventory.md`, private repo), so every project counts from one
+shelf. Docs now call for a small 8 Ω speaker (28 to 40 mm); the 3" one is too big for a
+frog she carries. The CC1101 is ELECHOUSE's 915 MHz module (spring-antenna 915 versions
+are rare); its antenna goes inside the case as an 8.2 cm wire (`docs/wiring.md`).
+
+**Decided.** The WH51 decoder gets written from the protocol notes, not ported from
+rtl_433 (GPL-2.0), so hestia can reuse it as a cheap 915 MHz receiver. NFC taps are a
+post-MVP idea, framed as a mirror: she taps a printed object and the frog does what
+she's doing (plays, games, reads). No score, nothing it asks for
+(`docs/firmware-notes.md`).
+
+**In flight.** 1.27 mm double-row pins (2x50) and the CC1101 (from Hong Kong) ordered.
+Still to buy: the magnetic USB-C adapter and the small speaker. The spare WH51 is on
+the desk for her pot. The watering can is still untested with her.
+
+**Next concrete action.** Pins into the sockets, the USB voltage check, solder button +
+LED, flash `env:frog`. While the radio ships, the WH51 decoder with desktop tests is
+build work that needs no hardware.
+
+**[non-production]** (in `~/me/queue.md`): order the USB-C adapter + speaker; the
+battery runtime test; return the Fluke after the LiPo checks; next visit, the thirsty
+test and the missing face; pins in, check, solder.
+
 ## 2026-10-04
 
 **Changed.** One board arrived, the planned Waveshare ESP32-S3-LCD-1.28. Its two header
