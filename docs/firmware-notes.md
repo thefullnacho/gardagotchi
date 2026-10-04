@@ -176,21 +176,28 @@ it. The WH51 in her pot, heard over 915 MHz, lets the frog go where she goes.
   "hold the button while plugging in" stops working. Proposal: hold the button for
   10 seconds while it sits on the lily pad.
 
-## Later: NFC taps around the house (idea, 2026-10-04, beyond the MVP)
+## Later: NFC taps, the frog as a mirror (idea, 2026-10-04, beyond the MVP)
 
-She carries the frog to a printed object with an NFC tag inside and taps it: a toothbrush
-holder, the shoe shelf, the watering can. It fits the portable frog, since she brings the
-frog to the thing.
+She taps the frog on a printed object with an NFC tag inside, and the frog does what she
+is doing: tap the play cube and it plays, tap the little controller and it games, tap a
+book and it reads. Pretend play, not chores: there's no score, nothing to complete,
+nothing it asks for, so there's nothing to nag about. It fits the portable frog, since she
+brings the frog along to whatever she's doing.
 
+- **The rules it inherits:** a mirror is a reaction in the two-layer model. It holds until
+  she taps something else or a few minutes pass, then the frog goes back to its mood.
+  Love and celebrate still answer the button and the watering, and a thirsty LED still
+  pulses during a mirror. The plant stays the only thing the frog asks for.
+- **First tap of a new tag** could be a small surprise (a new pose found), earn-only. No
+  screen ever shows the set or the ones she hasn't found.
+- **Art:** one strip per activity, drawn like the faces (`docs/sprite-brief.md`): a frog
+  with a tiny controller, a frog with a book.
 - **Hardware:** a PN532 reader on the I2C bus the BH1750 already uses (GPIO6/7), so no new
   pins (an IRQ line, if wanted, can take a spare: 38, 39, 41, 42). It reads NTAG213/215
-  stickers and discs, which can be dropped into a print by pausing it at a layer. The
-  case needs room for the reader's antenna flat against one face, away from the LiPo
-  and the speaker magnet. Its RF field draws real current, so it should only listen
-  while the frog is awake and being held.
-- **The guard:** taps are earn-only. A tap can add to her collection or set off a reaction,
-  but the frog never asks for a chore and nothing shows a missed one. The plant stays the
-  only thing the frog asks for; otherwise it turns into a nag.
+  stickers and discs, which drop into a print by pausing it at a layer. The case needs
+  room for the reader's antenna flat against one face, away from the LiPo and the speaker
+  magnet. Its RF field draws real current, so it only listens while the frog is awake and
+  being held. Tags map to activities in a small table in flash, set by a grown-up.
 - Nothing to buy or build for it now. The one cost today is leaving room in the case.
 
 ## Rendering and animation
