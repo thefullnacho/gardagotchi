@@ -1,5 +1,51 @@
 # Status
 
+## 2026-10-04
+
+**Changed.** One board arrived, the planned Waveshare ESP32-S3-LCD-1.28. Its two header
+blocks are 1.27 mm **sockets**, not pins, so wires go on 1.27 mm male pins plugged in.
+Waveshare's schematic and pinout diagram confirm every pin we use, including the
+CC1101 pins from 2026-10-03, and answer that entry's open question: VSYS is USB 5 V
+through a Schottky diode, and the 3.3 V regulator runs from VBAT. So VSYS is very likely
+dead on battery, and the button LED and speaker amp take power from the battery lead
+instead (`docs/wiring.md`: the H1/H2 map and the checks). **First flash ever:** the frog
+booted on the real screen with the right colors. (This checkout had missed the
+2026-10-03 wireless pivot; it was merged at wrap.)
+
+The frog is now hand-painted art: Alex's original leaf frog, a strip of 64x64 cells per
+face in `faces/art/`, all ten faces drawn. `faces/frog.py` puts it on an 80x80 grid at
+3x and still draws the backdrops, props (re-placed and enlarged), plant cards and flower
+bed. Blinks play three frames now (half, closed, half; `lib/anim`, 44 tests pass). New
+builds: `env:artcheck` puts one strip on the screen (`faces/art_check.py` also checks
+it against the brief), and `env:demo` tours every face with nothing wired (BOOT button =
+hearts). `docs/sprite-brief.md` is the paste-in brief for drawing faces. Stage timing
+set from the seed bag (French marigold Sparky Mix): sprout day 10, leaves 21, bud 50,
+flower 65. `docs/calibration.md` notes marigolds like to dry out, so thirsty belongs at
+the dry end and soggy matters more.
+
+**Decided.** Green only: at this size the color says what the character is, and pink
+or purple read as alien; mint/lilac dropped. 3x on an 80 grid (4x cuts the frog off).
+Thirsty shows a watering can pouring on the frog instead of a thought bubble. Stage
+cards err late: a card must never show a stage the real pot hasn't reached.
+
+**First user test.** She saw the demo on the board. She loved the rainbow (celebrate,
+the watering reward). She didn't understand the watering prop (then a thought bubble)
+and one other face, not yet known. At the end: "all of the faces are cute." She doesn't
+know yet that the frog goes with her plant; that was kept surface level on purpose.
+
+**In flight / unverified.** The watering can is Alex's pick, untested with her. The
+other face she missed. Props are flat placeholders next to the painted frog. VSYS on
+battery (the schematic says dead; measure when the LiPo is in). Nothing is wired yet,
+and the WH51 decoder isn't started. The board is running `env:demo`.
+
+**Next concrete action.** 1.27 mm male pins into the sockets, the USB multimeter check,
+solder button + LED onto those pins, flash `env:frog`. Then the CC1101 and the WH51
+decoder (2026-10-03 plan).
+
+**[non-production]** (in `~/me/queue.md`): pins + bench list; CC1101 module + LiPo;
+the multimeter check; solder button + LED; next visit, the thirsty test and the missing
+face.
+
 ## 2026-10-03
 
 **Changed.** Architecture pivot: the frog is portable and battery-powered now. Soil

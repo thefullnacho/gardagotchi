@@ -26,7 +26,7 @@
 #endif
 
 namespace {
-constexpr sprites::Palette kPalette = sprites::MINT;  // she picks mint or lilac later
+constexpr sprites::Palette kPalette = sprites::GREEN;
 
 int shown_frame = -1;  // nothing drawn yet
 anim::Player player;

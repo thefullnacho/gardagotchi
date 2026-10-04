@@ -12,7 +12,7 @@ constexpr int PIN_LCD_BL   = 40;
 constexpr int PIN_I2C_SDA  = 6;   // shared: onboard IMU + soil sensor + light sensor
 constexpr int PIN_I2C_SCL  = 7;
 
-// ---- Ours, chosen from free non-strapping pins. Confirm against the board silkscreen. ----
+// ---- Ours, chosen from free non-strapping pins. All on header H1 (docs/wiring.md). ----
 constexpr int PIN_BUTTON   = 15;  // arcade button switch -> GND (internal pull-up)
 constexpr int PIN_LED      = 16;  // -> 1k -> PN2222 base (LED runs from 5V)
 constexpr int PIN_I2S_BCLK = 17;  // MAX98357A BCLK  (wired now, used later)

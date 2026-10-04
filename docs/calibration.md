@@ -5,6 +5,13 @@ range, and when it's **soggy**. The WH51 reports soil moisture as 0–100% direc
 the beds have been logging WH51 history into HA for a while, so thresholds start from
 that history and get tuned by watching her pot.
 
+**The plant decides where the lines go.** Her seeds are French marigold, Sparky Mix
+(*Tagetes patula*): sun to partial sun, well drained to dry. Marigolds like to dry out
+between waterings and rot when kept wet, so **thirsty** belongs at the genuinely dry
+end of the data, not at "drier than yesterday", and **soggy** matters more than it
+would for a thirstier plant. That's also kind to a 4-year-old: a forgotten day costs
+the marigold nothing.
+
 ## Setup
 1. Put the WH51 in her pot, probe fully in the soil. It runs about a year on its AA
    battery; nothing to wire on this side.

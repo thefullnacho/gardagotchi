@@ -81,6 +81,24 @@ void test_face_without_blink_never_blinks() {
   }
 }
 
+const anim::Clip kIdle = {30, 2, 32, kBreatheMs, 3};  // blink is frames 32, 33, 34 (half, closed, half)
+
+void test_blink_plays_its_frames_in_order() {
+  anim::Player p;
+  p.play(&kIdle, 0);
+  int64_t t = 0;
+  while (p.frame(t) < 32) t += 1;  // the first blink starts
+  uint16_t last = 32;
+  int seen = 1;
+  for (int64_t end = t + anim::Player::kBlinkMs; t < end; ++t) {
+    uint16_t f = p.frame(t);
+    TEST_ASSERT_TRUE(f == last || f == last + 1);
+    if (f != last) { ++seen; last = f; }
+  }
+  TEST_ASSERT_EQUAL_INT(3, seen);
+  TEST_ASSERT_TRUE(p.frame(t) <= 31);  // back to the loop
+}
+
 }  // namespace
 
 void setUp() {}
@@ -94,5 +112,6 @@ int main() {
   RUN_TEST(test_blinks_now_and_then_briefly);
   RUN_TEST(test_blinks_are_not_evenly_spaced);
   RUN_TEST(test_face_without_blink_never_blinks);
+  RUN_TEST(test_blink_plays_its_frames_in_order);
   return UNITY_END();
 }

@@ -1,20 +1,72 @@
 # Wiring: GPIO map and solder checklist
 
-Board: Waveshare ESP32-S3-LCD-1.28 (non-touch). Headers are 1.27 mm pitch; wires
-are soldered straight to the pads. Pin numbers live in `firmware/include/pins.h`.
-If a wire moves, change that one file.
+Board: Waveshare ESP32-S3-LCD-1.28 (non-touch). It ships with two 2x10 header blocks
+on the back, H1 and H2, at 1.27 mm pitch (half the usual breadboard spacing). The
+blocks are **sockets**, not pins: wires go onto 1.27 mm male pins plugged into them,
+and nothing gets soldered to the board itself. Pin numbers live in
+`firmware/include/pins.h`. If a wire moves, change that one file.
 
-## Before you solder: two checks (5 minutes, a multimeter)
+## The two headers
 
-1. **Confirm the pin labels.** The Waveshare wiki lists what the board uses on its own,
-   but it doesn't publish a full list of the header pins. Read the silkscreen and
-   confirm **GPIO15, 16, 17, 18, 21** and **GPIO13, 14, 4, 5, 2** and **VSYS, 3V3, GND**
-   are all broken out. If one is missing, any pin from the spare list below works.
-   Tell me which one and I'll change `pins.h`.
-2. **Is VSYS a usable 5 V output on battery?** Plug the board into USB and measure VSYS
-   to GND: about 4.6 to 5.1 V means the LED and speaker amp can run from it on USB.
-   Then unplug USB, plug in the LiPo, and measure again. If VSYS is dead on battery,
-   the button LED needs a new home (3V3, dimmer — or a boost). Stop and we'll decide.
+Hold the board display down, USB-C at the top. H1 is the block on the left, H2 on the
+right. Rows count down from the USB-C end. This is Waveshare's pinout diagram,
+cross-checked against their schematic (`Esp32-s3-lcd-.128-sch.pdf` on the wiki).
+
+**H1 (left): the button, LED, speaker amp, and one radio pin.**
+
+| Row | Left column | Right column |
+|---|---|---|
+| 1 | GPIO36 | GPIO46 |
+| 2 | GPIO35 | GPIO45 |
+| 3 | GPIO34 | GPIO42 |
+| 4 | GPIO33 | GPIO41 |
+| 5 | **GPIO21** (I2S DIN) | GPIO40 (backlight, don't touch) |
+| 6 | **GPIO18** (I2S LRC) | GPIO39 |
+| 7 | **GPIO17** (I2S BCLK) | GPIO38 |
+| 8 | **GPIO16** (LED) | GPIO37 |
+| 9 | **GPIO15** (button) | **VSYS** |
+| 10 | **GPIO14** (CC1101 MISO) | **GND** |
+
+**H2 (right): power, the light sensor, and the radio.**
+
+| Row | Left column | Right column |
+|---|---|---|
+| 1 | **GND** | **GND** |
+| 2 | **VSYS** | **3V3** (the diagram says ADC_AVDD; the schematic says 3V3) |
+| 3 | **GPIO6** (I2C SDA) | BOOT, don't touch |
+| 4 | **GPIO7** (I2C SCL) | RUN (this is reset), don't touch |
+| 5 | GPIO8 (display) | GPIO0 (strapping, avoid) |
+| 6 | GPIO9 (display) | GPIO1 (battery voltage, onboard) |
+| 7 | GPIO10 (display) | **GPIO2** (CC1101 GDO0) |
+| 8 | GPIO11 (display) | GPIO3 (strapping, avoid) |
+| 9 | GPIO12 (display) | **GPIO4** (CC1101 MOSI) |
+| 10 | **GPIO13** (CC1101 SCK) | **GPIO5** (CC1101 CS) |
+
+Watch rows 3 and 4 of H2: a solder bridge from SDA or SCL to BOOT or RUN will hold the
+board in reset or in download mode.
+
+## Before you solder: one check now, one when the LiPo arrives (a multimeter)
+
+The schematic settles which pins exist: every pin above is on a header. It also shows
+how power flows: **VSYS is USB 5 V through a Schottky diode** (VBUS → MBR230 → VSYS),
+and the **3.3 V regulator runs from VBAT** (the battery side of the charger). So VSYS
+is there on USB and very likely dead on battery.
+
+Probe tips don't fit 1.27 mm sockets, so do these once the male pins are plugged in.
+
+1. Board on USB, display down, USB-C at the top. On **H1, right column, rows 9 and
+   10** (VSYS and GND, the bottom two pins on the right), expect **about 4.6 to 4.8 V**.
+   Near 0 V means the board is rotated from the drawing or you are on the wrong
+   column. Stop there and tell me what you see. While it's plugged in: **H2, right
+   column, row 2 against row 1** (3V3 and GND), expect **about 3.3 V**.
+2. **When the LiPo is in:** unplug USB and measure H1 rows 9 and 10 again. The schematic
+   says about 0 V. If so, the button LED and the speaker amp take power from the
+   battery's + lead (3.7 to 4.2 V) instead of VSYS, on USB and on battery alike: the
+   MAX98357A runs from 2.5 to 5.5 V, and the LED will be a little dimmer. VBAT isn't on
+   either header, so it's tapped at the battery lead.
+
+The pins are 1.27 mm apart and VSYS sits right next to GND. Hold the probes steady and
+never let one tip touch two pins.
 
 ## GPIO map
 
@@ -44,8 +96,9 @@ If a wire moves, change that one file.
 
 ## Solder checklist
 
-Work one group at a time, then flash `env:frog` or `env:calibrate` to test before the
-next group.
+Every wire lands on a 1.27 mm male pin plugged into H1 or H2, never on the board. Work
+one group at a time, then flash `env:frog` or `env:calibrate` to test before the next
+group.
 
 ### 1. Button (test: press → love face; serial prints `button: love`)
 - [ ] Button switch terminal A → **GPIO15**
@@ -61,12 +114,11 @@ Check that against your part's datasheet, because some makers swap the order.
 - [ ] **GPIO16** → 1 kΩ resistor → PN2222 **base** (middle)
 - [ ] PN2222 **emitter** → **GND**
 - [ ] PN2222 **collector** → button **LED −**
-- [ ] Button **LED +** → **VSYS (5 V)**
+- [ ] Button **LED +** → **VSYS** for bench testing on USB; the battery + lead once
+  check 2 confirms VSYS is dead on battery
 - [ ] Optional: 10 kΩ from base to GND, so the LED stays fully off while the board boots
 
-The LED has its own resistor inside, so nothing else is needed on the 5 V side.
-**Battery caveat:** this assumes check 2 passes on battery power. If VSYS is dead
-without USB, the LED moves (see check 2).
+The LED has its own resistor inside, so nothing else is needed on the supply side.
 
 ### 3. Light sensor on I2C (test: calibrate build prints `light found`)
 **Power the BH1750 from 3V3, not 5 V.** Its board has pull-up resistors tied
@@ -87,7 +139,8 @@ is 3.3 V both ways.
   the garden fine.
 
 ### 5. Speaker amp (wire now; firmware for sound comes later)
-- [ ] MAX98357A **VIN** → **VSYS (5 V)**, **GND** → **GND**
+- [ ] MAX98357A **VIN** → **VSYS** for bench testing on USB; the battery + lead once
+  check 2 confirms VSYS is dead on battery. **GND** → **GND**
 - [ ] **BCLK** → **GPIO17**, **LRC** → **GPIO18**, **DIN** → **GPIO21**
 - [ ] **GAIN**: tie to **VIN** for the quietest fixed gain (6 dB). This is a kid's toy near her ears; volume can go up in software, not down in hardware
 - [ ] **SD**: leave unconnected (mono, amp on)
@@ -97,18 +150,15 @@ is 3.3 V both ways.
 - 3.7V LiPo into the **MX1.25** header. The onboard charger tops it up over USB-C.
   **Check polarity with the multimeter before the first plug-in** — red must land on +.
 - Bench power / charging: USB-C, **at least 1 A**. The speaker amp pulls current in
-  bursts at 5 V; a weak phone charger can brown out the board mid-chirp (it reboots).
+  bursts; a weak phone charger can brown out the board mid-chirp (it reboots).
 - Battery voltage is readable in firmware on GPIO1 (onboard divider, see wiki).
 
 ## Things I'm not sure of (flagged, not guessed)
-- **Full header pin list:** see check 1 above.
-- **VSYS on battery power:** see check 2 above. The button LED and speaker amp both
-  want 5 V; if VSYS is USB-only, we need a plan B for battery operation.
-- **Display color settings:** `invert = true`, `rgb_order = false` is the usual GC9A01
-  setup. If the frog looks like a photo negative or red and blue are swapped, it's a
-  one-word change in `firmware/src/display.cpp`.
-- **Serial port:** the wiki says USB goes through a CH343P chip. If the serial monitor
-  stays silent, we may need a different USB setting; tell me what you see.
+- **VSYS on battery power:** the schematic says USB only (see the check section).
+  Check 2 confirms it on the real board.
 - **WH51 sensor ID:** the frog must filter by her pot's sensor ID or it'll hear the
   beds too. The ID prints in the `radio` line on first reception; hardcode it after
   the first run.
+
+Confirmed on the real board 2026-10-04: the display colors (`invert = true`,
+`rgb_order = false`) and the serial port (CH343 USB chip, `/dev/ttyACM0`).

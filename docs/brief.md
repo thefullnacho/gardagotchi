@@ -13,21 +13,25 @@ This brief replaces the original concept (ESPHome, MQTT, greenhouse moods, piezo
 - Lore: we had a real bullfrog named Jeremiah at our pond. She names the frog herself (naming ceremony on day one).
 
 ## Hardware (ordered)
-- Waveshare ESP32-S3-LCD-1.28 (NON-touch): 240x240 round GC9A01 display, onboard QMI8658 IMU. Headers are 1.27mm pitch; wires soldered directly. The onboard I2C bus is GPIO6 (SDA) / GPIO7 (SCL); the BH1750 shares it.
+- Waveshare ESP32-S3-LCD-1.28 (NON-touch): 240x240 round GC9A01 display, onboard QMI8658 IMU. Its two header blocks are 1.27 mm sockets; wires go on 1.27 mm male pins plugged in, never on the board. The onboard I2C bus is GPIO6 (SDA) / GPIO7 (SCL); the BH1750 shares it.
 - CC1101 915 MHz module on SPI (SCK 13, MISO 14, MOSI 4, CS 5, GDO0 2), hearing the Ecowitt WH51 in her pot. WH51 runs a year on its AA battery; no soil node to build, power, or weatherproof. Filter by her pot's sensor ID so the frog ignores the bed sensors.
 - 3.7V LiPo into the MX1.25 header; onboard charger tops it up over USB-C. Check polarity before the first plug-in.
 - BH1750 light sensor (I2C)
 - MAX98357A I2S amp + small 4Ω speaker, for voice clips recorded in Grandpa's voice
-- Adafruit 30mm yellow LED arcade button (#3488). LEDs need 5V: driven via PN2222 NPN (GPIO → 1k → base, emitter → GND, collector → LED−, LED+ → 5V). PWM on that GPIO pulses the LED. **Open:** VSYS may be USB-only; check on battery (wiring.md check 2).
+- Adafruit 30mm yellow LED arcade button (#3488). LEDs need 5V: driven via PN2222 NPN (GPIO → 1k → base, emitter → GND, collector → LED−, LED+ → 5V). PWM on that GPIO pulses the LED. VSYS is USB-only per the schematic, so on battery the LED (and the amp) run from the battery + lead instead; wiring.md check 2 confirms it.
 - Printed case on a Bambu A1 (multicolor). Room for the LiPo, CC1101 + antenna placement away from the battery.
 - GPIO map: see `wiring.md`.
 
 ## Art
-- `faces/frog.py` generates everything procedurally: a 60x60 grid scaled 4x to 240x240.
+- The frog is hand-painted pixel art (a leaf on its head), one strip of 64x64 cells per
+  face in `faces/art/`. `docs/sprite-brief.md` is the format and the list of faces.
+- `faces/frog.py` puts the frog on an 80x80 grid scaled 3x to 240x240 and draws the
+  backdrops, props, plant cards and flower bed around it.
 - 9 states: content, happy, love (button press), thirsty, soggy (overwatered), sunny, cloudy, sleeping, celebrate.
-- Two palettes, mint and lilac. She hasn't picked one yet.
+- Green only, decided 2026-10-04. At this size the color tells you what the character
+  is: green reads as a frog that belongs with a plant, while pink or purple scaled down
+  reads as alien. The mint/lilac choice is dropped.
 - 5 plant growth stages: seed, sprout, leaves, bud, flower.
-- Single still frames. Animation (2–3 frames per state: blink, breathing, happy wiggle) is NOT done.
 
 ## Firmware direction
 - Arduino framework via PlatformIO, LovyanGFX. Not ESPHome.

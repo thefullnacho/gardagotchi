@@ -18,7 +18,12 @@ uint16_t Player::frame(int64_t now_ms) {
       blink_until_ms_ = now_ms + kBlinkMs;
       next_blink_ms_ = blink_until_ms_ + nextGap();
     }
-    if (now_ms < blink_until_ms_) return (uint16_t)clip_->blink;
+    if (now_ms < blink_until_ms_) {
+      int64_t into = now_ms - (blink_until_ms_ - kBlinkMs);
+      int i = (int)(into * clip_->blink_count / kBlinkMs);
+      if (i >= clip_->blink_count) i = clip_->blink_count - 1;
+      return (uint16_t)(clip_->blink + i);
+    }
   }
 
   int64_t total = 0;

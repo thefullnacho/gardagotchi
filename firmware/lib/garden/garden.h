@@ -18,12 +18,15 @@ enum class Stage : uint8_t { Seed, Sprout, Leaves, Bud, Flower };
 enum class Reveal : uint8_t { None, Grew, Bloomed };
 
 struct Config {
-  // Growth days to reach each stage, roughly a dwarf French marigold sown indoors
-  // (sprouts in about a week, flowers around 7 weeks). Adjust from the actual packet.
-  uint16_t sprout_day = 6;
-  uint16_t leaves_day = 14;
-  uint16_t bud_day = 40;
-  uint16_t flower_day = 50;
+  // Growth days to reach each stage, for her seeds: French marigold Sparky Mix
+  // (Tagetes patula). Sellers give 4 to 14 days to sprout and 50 to 77 to bloom. These
+  // sit at the late end, because the pot is on an autumn windowsill and a card that
+  // shows a sprout before the real pot has one tells her something false. A card that
+  // comes a few days after the real thing just confirms what she already saw.
+  uint16_t sprout_day = 10;
+  uint16_t leaves_day = 21;
+  uint16_t bud_day = 50;
+  uint16_t flower_day = 65;
 
   int64_t min_day_ms = 20LL * 3600 * 1000;       // dawns closer than this don't count
   int64_t no_light_day_ms = 24LL * 3600 * 1000;  // no light sensor: count by awake time

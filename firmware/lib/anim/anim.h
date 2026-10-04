@@ -9,8 +9,9 @@ namespace anim {
 struct Clip {
   uint16_t first;
   uint8_t count;
-  int16_t blink;       // frame to show during a blink, or -1 for "this face doesn't blink"
+  int16_t blink;       // first frame of the blink, or -1 for "this face doesn't blink"
   const uint16_t* ms;  // how long each loop frame shows
+  uint8_t blink_count = 1;  // blink frames blink .. blink+blink_count-1, shown in order
 };
 
 class Player {
@@ -24,7 +25,7 @@ class Player {
   // The frame number to draw right now.
   uint16_t frame(int64_t now_ms);
 
-  static constexpr int64_t kBlinkMs = 150;
+  static constexpr int64_t kBlinkMs = 180;  // split across the blink frames
   static constexpr int64_t kBlinkGapMinMs = 2500;
   static constexpr int64_t kBlinkGapMaxMs = 6000;
 

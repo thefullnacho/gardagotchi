@@ -1,13 +1,19 @@
 """Pixel-art frog faces for a 240x240 round display.
-Drawn on a 60x60 grid, scaled 4x (nearest neighbor)."""
-import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+
+The frog itself is hand-painted art: one strip per face in faces/art/<face>.png, 64x64
+cells (docs/sprite-brief.md). This file puts each cell on an 80x80 grid, scaled 3x
+(nearest neighbor), and draws everything around it: the backdrop, the props in front,
+the plant cards and the flower bed. A face with no strip yet borrows a cell of the
+idle (content.png), so its backdrop and props still say which mood it is."""
 import os
 
-N = 60
-SCALE = 4
+import numpy as np
+from PIL import Image, ImageDraw, ImageFont
+
+N = 80
+SCALE = 3
 yy, xx = np.mgrid[0:N, 0:N]
-CX = CY = 30
+CX = CY = 40
 
 def ell(x0, y0, x1, y1):
     cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
@@ -26,11 +32,11 @@ def hexc(h):
     h = h.lstrip('#')
     return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
 
+# The frog is green, and stays green: at this size the color says what the character
+# is, and pink or purple read as alien (docs/brief.md). A palette is a color swap for
+# the frog, {"#art": "#new"}; the one palette swaps nothing.
 PALETTES = {
-    "mint": dict(body="#72D27F", shade="#4DAE63", belly="#EAF8D8", line="#26383A",
-                 cheek="#FF8DB9", lid="#5CC06F", dry="#B5C97A", dryshade="#95A85E"),
-    "lilac": dict(body="#C7A2FF", shade="#A07BE6", belly="#FCEBFF", line="#3A2656",
-                  cheek="#FF6FA8", lid="#B28FF2", dry="#CDBBD6", dryshade="#AE9BB8"),
+    "green": {},
 }
 C = dict(white="#FFFFFF", gold="#FFD35C", golddark="#E0A526", gem="#FF4F9A",
          pink="#FF8DB9", hot="#FF4F9A", tongue="#FF7B9C", mouth="#5A2236",
@@ -50,152 +56,71 @@ def stamp(img, x, y, rows, cmap):
             if ch in cmap and 0 <= y + j < N and 0 <= x + i < N:
                 img[y + j, x + i] = hexc(cmap[ch])
 
+HEART_L = [".###.###.", "#########", "#########", "#########", ".#######.", "..#####..", "...###...",
+           "....#...."]
 HEART = [".##.##.", "#######", "#######", ".#####.", "..###..", "...#..."]
 HEART_S = [".#.#.", "#####", ".###.", "..#.."]
 DROP = ["..#..", "..#..", ".###.", "#####", "#####", ".###."]
 SUN = ["#..#..#", ".#####.", "#######", "#######", "#######", ".#####.", "#..#..#"]
-CLOUD = ["...###....", ".######...", "#########.", "##########", ".########."]
+CLOUD = ["....####......", "..########....", ".###########..", "##############", "##############",
+         ".############."]
 MOON = [".###.", "##...", "##...", "##...", ".###."]
 STAR = [".#.", "###", ".#."]
-Z_BIG = ["#####", "...#.", "..#..", ".#...", "#####"]
-Z_SM = ["###", "..#", ".#.", "#..", "###"]
-CROWN = ["#..#..#", "##.#.##", "#######", "#######"]
+Z_BIG = ["#######", ".....#.", "....#..", "...#...", "..#....", ".#.....", "#######"]
+Z_SM = ["#####", "...#.", "..#..", ".#...", "#####"]
 SPARK = ["..#..", "..#..", "##.##", "..#..", "..#.."]
+CAN = ["......######..........",  # watering can, spout toward the frog
+       ".....#......#.........",
+       ".....#......#......###",
+       ".....#......#.....###.",
+       "..bbbbbbbbbbbbb..##...",
+       ".bbbbbbbbbbbbbbb##....",
+       ".bhbbbbbbbbbbbb#......",
+       ".bhbbbbbbbbbbb#.......",
+       ".bhbbbbbbbbbbbb.......",
+       ".bbbbbbbbbbbbbb.......",
+       ".bbbbbbbbbbbbbb.......",
+       ".bbbbbbbbbbbbbb.......",
+       "..bbbbbbbbbbbbb.......",
+       "...bbbbbbbbbbb........"]
 
-# ---------- frog geometry ----------
-HEAD = ell(15, 20, 45, 43)
-BUMP_L, BUMP_R = circ(22, 22, 6.2), circ(38, 22, 6.2)
-BODY = ell(19, 36, 41, 53)
-FOOT_L, FOOT_R = ell(13, 48, 25, 55), ell(35, 48, 47, 55)
-BELLY = ell(23, 41, 37, 52)
-SIL = HEAD | BUMP_L | BUMP_R | BODY | FOOT_L | FOOT_R
-EYES = [(22, 22), (38, 22)]
+# ---------- the frog: hand-painted strips ----------
+ART = os.path.join(os.path.dirname(os.path.abspath(__file__)), "art")
+CELL = 64
+OFF = (N - CELL) // 2  # the 64 cell sits centered on the 80 grid
+# Cells of a full strip: the face, a half-lidded and a closed blink, a squash, a stretch.
+FACE, HALF, CLOSED, SQUASH, STRETCH = range(5)
+# Faces without a strip of their own borrow this cell of content.png.
+BORROW = dict(cloudy=HALF, thirsty=HALF, sleeping=CLOSED, sleepy_love=CLOSED)
 
-def draw_frog(img, P, dry=False, droop=0):
-    body, shade = (P["dry"], P["dryshade"]) if dry else (P["body"], P["shade"])
-    sil = SIL
-    if droop:  # shift everything down a bit (tired/droopy)
-        sil = np.roll(SIL, droop, axis=0)
-    img[sil] = hexc(body)
-    # shading on lower body + feet
-    low = sil & (yy >= 46 + droop)
-    img[low] = hexc(shade)
-    img[np.roll(BELLY, droop, 0)] = hexc(P["belly"])
-    for f in (FOOT_L, FOOT_R):
-        f2 = np.roll(f, droop, 0)
-        img[f2] = hexc(shade)
-        e = edge(f2) & (yy < 52 + droop)
-        img[e] = hexc(P["line"])
-    img[edge(sil)] = hexc(P["line"])
-    return droop
+def _strip(name):
+    path = os.path.join(ART, name + ".png")
+    if not os.path.exists(path):
+        return None
+    im = np.array(Image.open(path).convert("RGBA"))
+    return [im[:, i * CELL:(i + 1) * CELL] for i in range(im.shape[1] // CELL)]
 
-# ---------- eyes ----------
-def eye_open(img, P, cx, cy, sparkle=True, look=(0, 1), pr=3.0):
-    img[circ(cx, cy, 5)] = hexc(C["white"])
-    img[edge(circ(cx, cy, 5))] = hexc(P["line"])
-    img[circ(cx + look[0], cy + look[1], pr)] = hexc(P["line"])
-    if sparkle:
-        px, py = cx + look[0], cy + look[1]
-        for (dx, dy) in [(-2, -2), (-1, -2), (-2, -1), (-1, -1)]:
-            img[py + dy, px + dx] = hexc(C["white"])
-        img[py + 1, px + 1] = hexc(C["white"])
+def _cells(state):
+    """Five cells for a face, whatever its strip has: missing ones repeat the face."""
+    own = _strip(state)
+    if own is None:
+        idle = _strip("content")
+        base = BORROW.get(state, FACE)
+        if base != FACE:  # a borrowed sleepy or half-lidded face: no blink, no bounce
+            return [idle[base]] * 5, False
+        return idle, True
+    if len(own) >= 5:
+        return own[:5], True
+    if len(own) >= 3:
+        return own[:3] + [own[FACE]] * 2, True
+    return [own[FACE]] * 5, False
 
-def eye_closed_happy(img, P, cx, cy):  # ^
-    for dx, dy in [(-3, 1), (-2, 0), (-1, -1), (0, -1), (1, -1), (2, 0), (3, 1)]:
-        img[cy + dy, cx + dx] = hexc(P["line"])
-        img[cy + dy + 1, cx + dx] = hexc(P["line"]) if abs(dx) < 3 and dy < 0 else img[cy + dy + 1, cx + dx]
+def _recolor(cell, P):
+    out = cell.copy()
+    for src, dst in P.items():
+        out[(cell[..., :3] == hexc(src)).all(-1) & (cell[..., 3] > 0), :3] = hexc(dst)
+    return out
 
-def eye_sleep(img, P, cx, cy):  # u-shaped lash line
-    for dx, dy in [(-3, -1), (-2, 0), (-1, 1), (0, 1), (1, 1), (2, 0), (3, -1)]:
-        img[cy + dy, cx + dx] = hexc(P["line"])
-
-def eye_half(img, P, cx, cy, dry=False):
-    eye_open(img, P, cx, cy, sparkle=False, look=(0, 2), pr=2.5)
-    lid = circ(cx, cy, 5) & (yy <= cy)
-    img[lid] = hexc(P["dryshade"] if dry else P["lid"])
-    img[edge(circ(cx, cy, 5))] = hexc(P["line"])
-    for x in range(cx - 4, cx + 5):
-        img[cy, x] = hexc(P["line"])
-
-def eye_heart(img, P, cx, cy):
-    img[circ(cx, cy, 5)] = hexc(C["white"])
-    img[edge(circ(cx, cy, 5))] = hexc(P["line"])
-    stamp(img, cx - 3, cy - 2, HEART, {"#": C["hot"]})
-    img[cy - 1, cx - 2] = hexc(C["white"])
-
-def eye_squeeze(img, P, cx, cy, left):  # > <
-    pts = [(-2, -2), (-1, -1), (0, 0), (-1, 1), (-2, 2)]
-    for dx, dy in pts:
-        dx = dx if left else -dx
-        img[cy + dy, cx + dx + (1 if left else -1)] = hexc(P["line"])
-        img[cy + dy, cx + dx + (2 if left else -2)] = hexc(P["line"])
-
-def eye_star(img, P, cx, cy):
-    img[circ(cx, cy, 5)] = hexc(C["white"])
-    img[edge(circ(cx, cy, 5))] = hexc(P["line"])
-    stamp(img, cx - 2, cy - 2, SPARK, {"#": C["gold"]})
-    img[cy, cx] = hexc(C["golddark"])
-
-def sunglasses(img, P):
-    for (cx, cy) in EYES:
-        img[ell(cx - 5, cy - 3, cx + 6, cy + 5)] = hexc(C["glass"])
-        img[edge(ell(cx - 5, cy - 3, cx + 6, cy + 5))] = hexc(C["hot"])
-        img[cy - 1, cx - 2] = hexc(C["white"]); img[cy - 1, cx - 1] = hexc(C["white"])
-    for x in range(27, 34):
-        img[21, x] = hexc(C["hot"])
-
-# ---------- mouths ----------
-MY = 35
-def mouth_smile(img, P, y=MY):
-    for dx, dy in [(-3, 0), (-2, 1), (-1, 1), (0, 1), (1, 1), (2, 1), (3, 0)]:
-        img[y + dy, 30 + dx] = hexc(P["line"])
-
-def mouth_big(img, P, y=MY):
-    m = ell(25, y - 1, 36, y + 6) & (yy >= y)
-    img[m] = hexc(C["mouth"])
-    img[ell(27, y + 2, 34, y + 7) & m] = hexc(C["tongue"])
-    img[edge(m)] = hexc(P["line"])
-
-def mouth_small(img, P, y=MY):
-    for dx in (-1, 0, 1):
-        img[y + 1, 30 + dx] = hexc(P["line"])
-
-def mouth_o(img, P, y=MY):
-    m = circ(30.5, y + 1.5, 1.8)
-    img[m] = hexc(C["mouth"]); img[edge(m)] = hexc(P["line"])
-
-def mouth_tongue(img, P, y=MY):
-    for dx in range(-3, 4):
-        img[y + 1, 30 + dx] = hexc(P["line"])
-    t = ell(29, y + 1, 34, y + 6) & (yy > y + 1)
-    img[t] = hexc(C["tongue"]); img[edge(t) & (yy > y + 1)] = hexc(C["mouth"])
-
-def mouth_wavy(img, P, y=MY):
-    for i, dx in enumerate(range(-4, 5)):
-        img[y + (i % 2), 30 + dx] = hexc(P["line"])
-
-def cheeks(img, P, y=33, color=None):
-    col = hexc(color or P["cheek"])
-    for x0 in (17, 40):
-        img[y:y + 2, x0:x0 + 4] = col
-
-def crown(img):
-    stamp(img, 27, 13, CROWN, {"#": C["gold"]})
-    img[15, 30] = hexc(C["gem"])
-    img[14, 30] = hexc(C["gem"])
-    for x in range(27, 34):
-        img[16, x] = hexc(C["golddark"])
-
-def eye_blink(img, P, cx, cy, dry=False):  # closed for a blink: lid down, one lash line
-    img[circ(cx, cy, 5)] = hexc(P["dryshade"] if dry else P["lid"])
-    img[edge(circ(cx, cy, 5))] = hexc(P["line"])
-    for x in range(cx - 4, cx + 5):
-        img[cy + 1, x] = hexc(P["line"])
-
-# ---------- scenes ----------
-# A scene is three layers: the backdrop (never moves), the frog, and the props in
-# front (hearts, drops, clouds, Zs...). Animation frames nudge the frog by (dx, dy)
-# and the props by (pdx, pdy). blink=True closes the frog's eyes.
 SENT = (1, 2, 3)  # "nothing drawn here" marker for the moving layers
 
 def base(state):
@@ -213,7 +138,13 @@ def _paste(img, lay, dx, dy):
     m = (lay != SENT).any(-1)
     img[m] = lay[m]
 
-def scene(state, P, dx=0, dy=0, pdx=0, pdy=0, blink=False):
+def _frog_layer(cell):
+    lay = _layer()
+    a = cell[..., 3] > 0
+    lay[OFF:OFF + CELL, OFF:OFF + CELL][a] = cell[..., :3][a]
+    return lay
+
+def scene(state, P, dx=0, dy=0, pdx=0, pdy=0, cell=FACE):
     if state in CARDS:  # pdy picks the sparkle phase
         return card(CARDS.index(state), pdy)
     img = base(state)
@@ -223,115 +154,80 @@ def scene(state, P, dx=0, dy=0, pdx=0, pdy=0, blink=False):
     if state == "celebrate":  # rainbow arc behind the frog
         cols = ["#FF6B6B", "#FFB347", "#FFE066", "#6BD66B", "#6EC6FF", "#B07CFF"]
         for i, col in enumerate(cols):
-            r_out = 27 - i * 1.6
-            ring = circ(30, 34, r_out) & ~circ(30, 34, r_out - 1.6) & (yy < 34)
+            r_out = 37 - i * 2.2
+            ring = circ(40, 46, r_out) & ~circ(40, 46, r_out - 2.2) & (yy < 46)
             img[ring] = hexc(col)
     if asleep:
-        for (x, y) in [(12, 12), (33, 6), (8, 26), (52, 28), (19, 6)]:
+        for (x, y) in [(14, 16), (24, 8), (8, 34), (70, 38), (58, 30)]:
             stamp(img, x, y, STAR, {"#": C["star"]})
-        stamp(img, 40, 4, MOON, {"#": C["star"]})
+        stamp(img, 52, 6, MOON, {"#": C["star"]})
     if state == "soggy":  # puddle on the ground; the frog stands in it
-        pud = ell(8, 53, 52, 58)
+        pud = ell(14, 64, 66, 75)
         img[pud] = hexc(C["blue"]); img[edge(pud)] = hexc(C["bluedark"])
 
     # --- the frog ---
-    fr = _layer()
-    dry = state == "thirsty"
-    d = 2 if state == "thirsty" else 0
-    draw_frog(fr, P, dry=dry, droop=d)
-    crown(fr) if d == 0 else stamp(fr, 27, 13 + d, CROWN, {"#": C["gold"]})
-    if d:
-        fr[15 + d, 30] = hexc(C["gem"])
-    E = [(x, y + d) for x, y in EYES]
-
-    if state == "content":
-        for x, y in E: eye_open(fr, P, x, y)
-        mouth_smile(fr, P); cheeks(fr, P)
-    elif state == "happy":
-        for x, y in E: eye_closed_happy(fr, P, x, y)
-        mouth_big(fr, P); cheeks(fr, P)
-    elif state == "love":
-        for x, y in E: eye_heart(fr, P, x, y)
-        mouth_smile(fr, P); cheeks(fr, P, color=C["hot"])
-    elif state == "thirsty":
-        for x, y in E: eye_half(fr, P, x, y, dry=True)
-        mouth_tongue(fr, P, y=MY + d)
-    elif state == "soggy":
-        for i, (x, y) in enumerate(E): eye_squeeze(fr, P, x, y, left=(i == 0))
-        mouth_wavy(fr, P); cheeks(fr, P)
-    elif state == "sunny":
-        sunglasses(fr, P)
-        mouth_smile(fr, P); cheeks(fr, P)
-    elif state == "cloudy":
-        for x, y in E: eye_half(fr, P, x, y)
-        mouth_small(fr, P); cheeks(fr, P)
-    elif state == "sleeping":
-        for x, y in E: eye_sleep(fr, P, x, y)
-        mouth_small(fr, P); cheeks(fr, P)
-    elif state == "sleepy_love":  # woken by a press: one eye peeks open
-        eye_sleep(fr, P, *E[0])
-        eye_open(fr, P, *E[1], look=(-1, 1), pr=2.5)
-        mouth_smile(fr, P); cheeks(fr, P, color=C["hot"])
-    elif state == "celebrate":
-        for x, y in E: eye_star(fr, P, x, y)
-        mouth_big(fr, P); cheeks(fr, P)
-    if blink:
-        for x, y in E: eye_blink(fr, P, x, y, dry=dry)
-    _paste(img, fr, dx, dy)
+    cells, _ = _cells(state)
+    _paste(img, _frog_layer(_recolor(cells[cell], P)), dx, dy)
 
     # --- props in front ---
     pr = _layer()
     if state == "happy":
-        stamp(pr, 7, 22, HEART_S, {"#": C["hot"]})
-        stamp(pr, 48, 18, HEART_S, {"#": C["hot"]})
+        stamp(pr, 7, 30, HEART, {"#": C["hot"]})
+        stamp(pr, 65, 26, HEART, {"#": C["hot"]})
     elif state == "love":
-        stamp(pr, 6, 16, HEART, {"#": C["hot"]})
-        stamp(pr, 47, 11, HEART, {"#": C["pink"]})
-        stamp(pr, 50, 26, HEART_S, {"#": C["hot"]})
-        stamp(pr, 10, 30, HEART_S, {"#": C["pink"]})
-    elif state == "thirsty":  # thought bubble with a water drop
-        pr[circ(48, 12, 6)] = hexc(C["white"]); pr[edge(circ(48, 12, 6))] = hexc(C["cloudsh"])
-        pr[circ(46.5, 21.5, 1.4)] = hexc(C["white"])
-        stamp(pr, 46, 9, DROP, {"#": C["blue"]})
-        pr[12, 47] = hexc(C["white"])
+        stamp(pr, 7, 20, HEART_L, {"#": C["hot"]})
+        stamp(pr, 61, 14, HEART_L, {"#": C["pink"]})
+        stamp(pr, 66, 30, HEART, {"#": C["hot"]})
+        stamp(pr, 8, 36, HEART, {"#": C["pink"]})
+    elif state == "thirsty":  # a watering can pouring on the frog: a thing she holds,
+        # where a thought bubble is a comic convention a 4-year-old doesn't read yet
+        stamp(pr, 6, 14, CAN, {"#": C["bluedark"], "b": C["blue"], "h": C["white"]})
+        for x, y in [(28, 19), (26, 21), (29, 22), (27, 24)]:
+            pr[y:y + 2, x] = hexc(C["blue"])
     elif state == "soggy":
-        for (x, y) in [(10, 8), (46, 6), (15, 20), (49, 22)]:
+        for (x, y) in [(12, 14), (60, 10), (8, 32), (68, 30)]:
             stamp(pr, x, y, DROP, {"#": C["blue"]})
     elif state == "sunny":
-        stamp(pr, 8, 10, SUN, {"#": C["orange"]})
-        pr[circ(11.5, 13.5, 2.3)] = hexc(C["yellow"])
+        for a in range(8):  # rays
+            ang = a * np.pi / 4
+            for r in (8, 9):
+                pr[int(17 + r * np.sin(ang)), int(17 + r * np.cos(ang))] = hexc(C["orange"])
+        pr[circ(17.5, 17.5, 5.5)] = hexc(C["orange"])
+        pr[circ(17.5, 17.5, 4)] = hexc(C["yellow"])
     elif state == "cloudy":
-        stamp(pr, 5, 12, CLOUD, {"#": C["cloud"]})
-        stamp(pr, 44, 8, CLOUD, {"#": C["cloudsh"]})
+        stamp(pr, 6, 16, CLOUD, {"#": C["cloud"]})
+        stamp(pr, 58, 14, CLOUD, {"#": C["cloudsh"]})
     elif state == "sleeping":
-        stamp(pr, 45, 17, Z_BIG, {"#": C["white"]})
-        stamp(pr, 50, 9, Z_SM, {"#": C["white"]})
+        stamp(pr, 61, 22, Z_BIG, {"#": C["white"]})
+        stamp(pr, 64, 13, Z_SM, {"#": C["white"]})
     elif state == "sleepy_love":
-        stamp(pr, 46, 12, HEART_S, {"#": C["hot"]})
+        stamp(pr, 63, 18, HEART, {"#": C["hot"]})
     elif state == "celebrate":
-        conf = [(8, 20, "red"), (11, 35, "blue"), (50, 20, "green"), (48, 38, "purple"),
-                (16, 9, "yellow"), (44, 8, "hot"), (6, 28, "orange"), (53, 30, "pink")]
+        conf = [(9, 26, "red"), (12, 46, "blue"), (68, 26, "green"), (66, 48, "purple"),
+                (20, 12, "yellow"), (58, 10, "hot"), (6, 37, "orange"), (72, 38, "pink")]
         for x, y, c in conf:
             pr[y:y + 2, x:x + 2] = hexc(C[c])
-        stamp(pr, 5, 42, SPARK, {"#": C["gold"]})
-        stamp(pr, 50, 43, SPARK, {"#": C["gold"]})
+        stamp(pr, 6, 56, SPARK, {"#": C["gold"]})
+        stamp(pr, 69, 56, SPARK, {"#": C["gold"]})
     _paste(img, pr, pdx, pdy)
 
     if asleep:  # dim everything a touch
-        img = (img.astype(float) * 0.78).astype(np.uint8)
-        img[:] = np.where((img == (np.array(hexc(BG["sleeping"])) * .78).astype(np.uint8)).all(-1)[..., None],
+        img = (img.astype(float) * DIM).astype(np.uint8)
+        img[:] = np.where((img == (np.array(hexc(BG["sleeping"])) * DIM).astype(np.uint8)).all(-1)[..., None],
                           hexc(BG["sleeping"]), img)
     return img
 
 # ---------- animation ----------
-# Each state loops through its frames: frog offset (dx, dy), prop offset (pdx, pdy),
-# and how long the frame shows in ms. blink=True means the firmware drops in a quick
-# blink at random moments (only for states whose eyes are open).
-def _f(ms, dx=0, dy=0, pdx=0, pdy=0):
-    return dict(ms=ms, dx=dx, dy=dy, pdx=pdx, pdy=pdy)
+# Each state loops through its frames: which cell of its strip, the frog offset (dx, dy),
+# the prop offset (pdx, pdy), and how long the frame shows in ms. blink=True means the
+# firmware drops in a quick blink (half, closed, half) at random moments, if the face's
+# strip has blink cells.
+def _f(ms, dx=0, dy=0, pdx=0, pdy=0, cell=FACE):
+    return dict(ms=ms, dx=dx, dy=dy, pdx=pdx, pdy=pdy, cell=cell)
 
 ANIM = {
-    "content":   dict(blink=True, frames=[_f(900), _f(900, dy=-1)]),                   # breathe
+    "content":   dict(blink=True, frames=[_f(2600), _f(120, cell=SQUASH),           # rest, then a hop
+                                          _f(140, cell=STRETCH)]),
     "happy":     dict(blink=False, frames=[_f(200, dx=-1), _f(200, dy=-1, pdy=-1),     # wiggle
                                            _f(200, dx=1), _f(200, dy=-1, pdy=-1)]),
     "love":      dict(blink=True, frames=[_f(250), _f(250, dy=-1, pdy=-1),              # bob, hearts float
@@ -343,22 +239,23 @@ ANIM = {
     "cloudy":    dict(blink=True, frames=[_f(1000), _f(1000, dy=-1, pdx=1),            # clouds drift
                                           _f(1000, pdx=2), _f(1000, dy=-1, pdx=1)]),
     "sleeping":  dict(blink=False, frames=[_f(2000), _f(2000, dy=-1, pdy=-1)]),        # slow breath, Zs rise
-    "celebrate": dict(blink=False, frames=[_f(120), _f(110, dy=-2, pdy=-1),            # bounce!
-                                           _f(160, dy=-3), _f(110, dy=-2, pdy=1)]),
+    "celebrate": dict(blink=False, frames=[_f(120), _f(110, cell=SQUASH, pdy=-1),      # bounce!
+                                           _f(160, dy=-3, cell=STRETCH), _f(110, dy=-2, pdy=1)]),
     "sleepy_love": dict(blink=False, frames=[_f(500), _f(500, pdy=-1)]),
 }
-for _c in ["card_seed", "card_sprout", "card_leaves", "card_bud", "card_flower"]:
-    ANIM[_c] = dict(blink=False, frames=[_f(300), _f(300, pdy=1)])  # sparkles twinkle
 
 def frames(state, P):
     """The loop frames for a state, as (image, ms) pairs."""
-    return [(scene(state, P, dx=f["dx"], dy=f["dy"], pdx=f["pdx"], pdy=f["pdy"]), f["ms"])
+    return [(scene(state, P, dx=f["dx"], dy=f["dy"], pdx=f["pdx"], pdy=f["pdy"], cell=f["cell"]), f["ms"])
             for f in ANIM[state]["frames"]]
 
-def blink_frame(state, P):
-    return scene(state, P, blink=True) if ANIM[state]["blink"] else None
+def blink_frames(state, P):
+    """The blink, in order (half, closed, half), or [] if this face doesn't blink."""
+    if state in CARDS or not ANIM[state]["blink"] or not _cells(state)[1]:
+        return []
+    return [scene(state, P, cell=c) for c in (HALF, CLOSED, HALF)]
 
-# ---------- plant growth stages (for the side of the screen) ----------
+# ---------- plant growth stages (the surprise card) ----------
 PLANT_BG = "#E9DDFF"
 SOIL, SOILD, POT, POTD, LEAF, LEAFD, STEM = ("#7A5236", "#5C3C26", "#FF8DB9", "#D9689A",
                                              "#6BD66B", "#3FA64F", "#4FB564")
@@ -399,15 +296,15 @@ FLOWER = [".p.p.",
           "..s..",
           ".ls..",
           "..s.."]
-BED_SLOTS = [(27, 50), (20, 49), (34, 49), (13, 46), (41, 46),   # centre out, then up the sides
-             (8, 40), (46, 40), (5, 33), (50, 33)]
+BED_SLOTS = [(37, 68), (28, 66), (46, 66), (18, 62), (56, 62),   # centre out, then up the sides
+             (10, 54), (64, 54), (6, 45), (69, 45)]
 PETALS = ["#FF6FA8", "#FFE066", "#B07CFF", "#FFB347", "#6EC6FF",
           "#FF6B6B", "#FFFFFF", "#FF8DB9", "#9DE6D2"]
 FLOWER_PARTS = dict(o=C["gold"], s="#4FB564", l="#6BD66B")
 DIM = 0.78
 
 def _inside(x, y):
-    return (x + .5 - 30) ** 2 + (y + .5 - 30) ** 2 <= 29.5 ** 2
+    return (x + .5 - CX) ** 2 + (y + .5 - CY) ** 2 <= (CX - .5) ** 2
 for _x, _y in BED_SLOTS:  # every flower pixel must land on the round screen
     for _j, _row in enumerate(FLOWER):
         for _i, _ch in enumerate(_row):
@@ -428,16 +325,16 @@ def card(stage, phase=0):
     bloom = stage == 4
     bg = hexc(BG["card_flower"] if bloom else BG["card_seed"])
     img = np.zeros((N, N, 3), np.uint8); img[:] = bg
-    pl = plant(stage).repeat(2, 0).repeat(2, 1)  # 24x24 -> 48x48
+    pl = plant(stage).repeat(3, 0).repeat(3, 1)  # 24x24 -> 72x72
     pl[(pl == hexc(PLANT_BG)).all(-1)] = bg
-    img[4:52, 6:54] = pl
-    spots = [[(8, 14), (47, 20), (12, 34), (44, 40)], [(14, 8), (48, 30), (6, 24), (40, 12)]]
+    img[2:74, 4:76] = pl
+    spots = [[(10, 18), (64, 26), (14, 44), (60, 50)], [(18, 10), (66, 40), (7, 32), (54, 14)]]
     for (x, y) in spots[phase % 2]:
         stamp(img, x, y, SPARK, {"#": C["gold"]})
     if bloom:
-        conf = [(10, 20, "red"), (48, 16, "blue"), (16, 44, "green"), (46, 46, "purple"),
-                (22, 8, "yellow"), (38, 6, "hot"), (5, 32, "orange"), (53, 34, "pink")]
-        for x, y, c in conf:
+        conf = [(12, 26), (64, 20), (20, 58), (62, 60), (28, 10), (52, 8), (6, 42), (72, 44)]
+        names = ["red", "blue", "green", "purple", "yellow", "hot", "orange", "pink"]
+        for (x, y), c in zip(conf, names):
             y2 = y + (1 if phase % 2 else 0)
             img[y2:y2 + 2, x:x + 2] = hexc(C[c])
     return img
@@ -454,6 +351,8 @@ def round_mask(im):
 
 STATES = ["content", "happy", "love", "thirsty", "soggy", "sunny", "cloudy", "sleeping", "celebrate",
           "sleepy_love", "card_seed", "card_sprout", "card_leaves", "card_bud", "card_flower"]
+for _c in CARDS:
+    ANIM[_c] = dict(blink=False, frames=[_f(300), _f(300, pdy=1)])  # sparkles twinkle
 LABEL = dict(content="content (idle)", happy="happy", love="love (button press)",
              thirsty="thirsty (soil dry)", soggy="soggy (too much water)", sunny="sunny (basking)",
              cloudy="cloudy / gray day", sleeping="sleeping (night)", celebrate="celebrate (just watered!)",
@@ -473,11 +372,7 @@ if __name__ == "__main__":
         os.makedirs(f"{out}/anim/{pname}", exist_ok=True)
         for s in STATES:
             fr = frames(s, P)
-            seq = fr + fr
-            b = blink_frame(s, P)
-            if b is not None:
-                seq.append((b, 150))
-            seq += fr
+            seq = fr + fr + [(b, 50) for b in blink_frames(s, P)] + fr
             ims = [round_mask(upscale(im, SCALE)) for im, _ in seq]
             ims[0].save(f"{out}/anim/{pname}/{s}.gif", save_all=True, append_images=ims[1:],
                         duration=[ms for _, ms in seq], loop=0, disposal=1)
@@ -503,7 +398,10 @@ if __name__ == "__main__":
         for i, s in enumerate(STATES):
             r, c = divmod(i, cols)
             x = pad + c * (cell + pad); y = 46 + r * (cell + pad + lab)
-            sheet.paste(round_mask(upscale(scene(s, P), SCALE)), (x, y))
+            img = scene(s, P)
+            if s not in CARDS:
+                img = flower_bed(img, 3, dim=s in ("sleeping", "sleepy_love"))
+            sheet.paste(round_mask(upscale(img, SCALE)), (x, y))
             d.text((x, y + cell + 4), LABEL[s], fill=(58, 38, 86), font=font)
         blocks.append(sheet)
     # plant strip

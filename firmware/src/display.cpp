@@ -72,11 +72,14 @@ void begin() {
 
 void drawFrame(sprites::Palette p, uint16_t index) {
   if (index >= sprites::kFrameCount) index = 0;
-  const uint8_t* px = sprites::kFrames[p][index];
-  const uint16_t* colors = sprites::kColors[p];
-  for (int y = 0; y < sprites::kH; ++y) {
-    for (int x = 0; x < sprites::kW; ++x) {
-      frame.fillRect(x * kScale, y * kScale, kScale, kScale, colors[px[y * sprites::kW + x]]);
+  drawIndexed(sprites::kFrames[p][index], sprites::kColors[p], sprites::kW);
+}
+
+void drawIndexed(const uint8_t* px, const uint16_t* colors, int n) {
+  const int scale = 240 / n;
+  for (int y = 0; y < n; ++y) {
+    for (int x = 0; x < n; ++x) {
+      frame.fillRect(x * scale, y * scale, scale, scale, colors[px[y * n + x]]);
     }
   }
 }

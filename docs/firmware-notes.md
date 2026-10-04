@@ -112,8 +112,9 @@ and lots of feedback for every action. That's something to build on, with one tr
   of it. Watering by the afternoon is plenty. (`growth_needs_care = false` switches to
   plain days since planting.)
 - **Stages** (seed, sprout, leaves, bud, flower) come from growth days. The numbers in
-  `garden::Config` are set for a dwarf French marigold (the chosen direction:
-  big easy seeds, no trellis, flowers in ~7 weeks); adjust from the actual packet.
+  `garden::Config` are set from her packet, French marigold Sparky Mix: sprout on day
+  10, leaves 21, bud 50, flower 65. That's the late end of what sellers quote, on
+  purpose: a card must never show a stage the real pot hasn't reached yet.
   The virtual plant can drift from the real one; stages are coarse on purpose.
 - **Surprises.** A new stage waits for her next press (while awake): the LED twinkles,
   and the press shows the plant card with a fanfare instead of hearts. It waits as long
@@ -137,16 +138,23 @@ and lots of feedback for every action. That's something to build on, with one tr
 
 ## Rendering and animation
 Each face is three layers in `faces/frog.py`: a backdrop that never moves, the frog,
-and props in front (hearts, drops, clouds, Zs). `ANIM` in frog.py lists each face's
-loop: how far the frog and the props shift on each frame, and for how long. So the frog
-can breathe or bounce while the rainbow stays put, or the Zs drift up while it sleeps.
+and props in front (hearts, drops, clouds, Zs). The frog is a cell of hand-painted art
+from `faces/art/<face>.png` (format in `docs/sprite-brief.md`); a face with no strip yet
+borrows a cell of the idle. `ANIM` in frog.py lists each face's loop: which cell, how
+far the frog and the props shift on each frame, and for how long. So the frog can hop
+(the idle's squash and stretch cells) while the rainbow stays put, or the Zs drift up
+while it sleeps.
 
-Blinks are not part of the loop. The firmware (`firmware/lib/anim`) drops a 150 ms
-blink in at random every 2.5 to 6 seconds, for the faces whose eyes are open, so it
-never looks mechanical.
+Blinks are not part of the loop. The firmware (`firmware/lib/anim`) drops a 180 ms
+blink in at random every 2.5 to 6 seconds (half-lidded, closed, half-lidded), for the
+faces whose strip has blink cells, so it never looks mechanical.
 
-`python3 faces/frog.py` writes previews to `faces/out/anim/` (one GIF per face, plus
-`all_mint.gif` / `all_lilac.gif` with every face playing at once).
-`python3 faces/export_sprites.py` packs every frame for the firmware: 60x60, one byte
-per pixel, scaled 4x on the device, and each frame goes to the screen in one push, so
-there's no flicker. 38 frames x 2 palettes is about 270 KB of the ~6 MB program space.
+`python3 faces/frog.py` writes previews to `faces/out/` (a contact sheet and one GIF
+per face in `anim/`). `python3 faces/export_sprites.py` packs every frame for the
+firmware: 80x80, one byte per pixel, scaled 3x on the device, and each frame goes to
+the screen in one push, so there's no flicker. 51 frames is about 320 KB of the ~6 MB
+program space.
+
+To judge a new strip on the real screen before it joins the frog:
+`python3 faces/art_check.py faces/art/<face>.png --bg <face>`, then flash
+`pio run -e artcheck -t upload`. It also warns if the strip breaks the brief.

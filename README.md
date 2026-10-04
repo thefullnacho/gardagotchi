@@ -19,7 +19,7 @@ gardagotchi/
 │   ├── lib/mood/      # the mood engine (plain C++, tested on the desktop)
 │   ├── src/           # display, button + LED, radio, calibration logger
 │   └── test/          # mood tests: pio test -e native
-├── faces/      # frog.py draws every face; export_sprites.py feeds the firmware
+├── faces/      # art/ holds the frog strips; frog.py composes every face; export_sprites.py feeds the firmware
 ├── tools/      # calib_pull.py: copy the calibration log off the board
 └── docs/       # brief, wiring, calibration, design notes
 ```
