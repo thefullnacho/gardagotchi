@@ -28,6 +28,12 @@ or purple read as alien; mint/lilac dropped. 3x on an 80 grid (4x cuts the frog 
 Thirsty shows a watering can pouring on the frog instead of a thought bubble. Stage
 cards err late: a card must never show a stage the real pot hasn't reached.
 
+**Planned (portable frog).** She wants to carry it off every time she sees it, so the
+plan for living with the 2026-10-03 pivot is in `docs/firmware-notes.md` ("Portable
+frog"): the rainbow waits for her press (the WH51 reports only every ~70 s), a lily-pad
+charging dock, low battery shown as a sleepy frog, doze when still and wake when picked
+up, a protected LiPo and a TPU bumper, and a new replant gesture.
+
 **First user test.** She saw the demo on the board. She loved the rainbow (celebrate,
 the watering reward). She didn't understand the watering prop (then a thought bubble)
 and one other face, not yet known. At the end: "all of the faces are cute." She doesn't

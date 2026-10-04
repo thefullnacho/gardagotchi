@@ -136,6 +136,46 @@ and lots of feedback for every action. That's something to build on, with one tr
   Growth restarts; keepsakes are kept.
 - Everything above is saved to flash on each change (about once a day).
 
+## Portable frog (plan, 2026-10-04; follows the 2026-10-03 wireless pivot)
+
+Why portable: every time she sees the frog she wants to carry it off. A wired soil
+probe would have yanked out of the pot, or tipped it over, the first time she grabbed
+it. The WH51 in her pot, heard over 915 MHz, lets the frog go where she goes.
+
+- **The rainbow waits for her press.** The WH51 reports about every 70 seconds, so the
+  frog hears a watering up to a minute after she pours, maybe after she has walked off.
+  So when it hears one, the LED twinkles (the surprise signal, as for a new plant
+  stage) and her next press plays celebrate. The delay turns into anticipation, and she
+  sets off the moment she loved most. It's still one celebration per watering, it
+  waits as long as she takes, and it comes before a waiting plant card (rainbow on this
+  press, card on the next). The brief's "celebrates on its own" still holds where it
+  matters: she never has to tell the frog she watered. The sensor knows; the press
+  only opens the surprise.
+- **A home: the lily pad.** A printed dock beside her pot that charges the frog, with a
+  magnetic USB-C plug so she can set it down without aiming a cable. The frog goes home
+  to its lily pad to rest; she can always take it back off.
+- **Low battery is a sleepy frog.** The board reads the battery on GPIO1. When it runs
+  low, the frog gets drowsy and wants its lily pad: a face, never a battery icon or a
+  number. Before it has to shut down it falls asleep on screen, so it never just goes
+  dark mid-play, and it wakes on the dock.
+- **Doze and wake.** The screen sleeps when the frog has sat still for a few minutes
+  (the onboard motion sensor) and wakes happy when she picks it up. The radio keeps
+  listening while the screen sleeps, so no watering is missed. Battery life awake is a
+  guess until measured: most of a day on a ~1000 mAh cell.
+- **Built for drops.** A LiPo with its own protection circuit, fully enclosed so nothing
+  can pierce it. Charging happens on the dock, where a grown-up can see it. A printed
+  TPU bumper around the round screen, with the glass recessed.
+- **Light means where the frog is now.** Night mode and sunny/cloudy follow the frog's
+  surroundings, not the plant's window: a frog in a backpack falls asleep. That's easy
+  for her to hold ("the frog likes the sun"), but sunny and cloudy no longer report the
+  plant's light. "Sensor facing out the window" in the night mode section only applies
+  while it's on the dock.
+- **Out of range** the frog keeps its last mood, which never gets worse for waiting. A
+  watering it hears later still waits for her press.
+- **Replanting needs a new gesture.** With a battery the frog is never cold-plugged, so
+  "hold the button while plugging in" stops working. Proposal: hold the button for
+  10 seconds while it sits on the lily pad.
+
 ## Rendering and animation
 Each face is three layers in `faces/frog.py`: a backdrop that never moves, the frog,
 and props in front (hearts, drops, clouds, Zs). The frog is a cell of hand-painted art
