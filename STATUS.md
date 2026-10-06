@@ -1,5 +1,23 @@
 # Status
 
+## 2026-10-06
+
+**Changed.** The WH51 decoder exists: `firmware/lib/wh51` (decode, CRC-8 0x31, byte-sum
+check, a 0 to 100% moisture guard), 12 desktop tests in `test/test_wh51`. `pio test -e
+native`: 56 pass, 1 skipped, 0 fail (the other three suites are unchanged at 44). Written
+for the CC1101's post-sync bytes, so preamble and sync stay the radio's job.
+
+**In flight / unverified.** The frame layout is a hypothesis. The repo had no packet notes
+to write from, so it comes from general knowledge of the protocol, and the tests build their
+own synthetic frames: they prove the decoder is consistent and rejects damage, not that
+it matches a real sensor. `test_real_capture` is skipped on purpose until one packet off
+the spare WH51 is pasted in. Also unchecked: `docs/calibration.md` lists a WH51
+`soil_temp_c` column, and I don't believe the WH51 reports temperature.
+
+**Next concrete action.** Pins in, the USB voltage check, solder button + LED, flash
+`env:frog`. When the CC1101 arrives: wire it, capture a packet, paste it into
+`test_real_capture`, and fix `decode()` if it fails.
+
 ## 2026-10-04 (later)
 
 **Changed.** The frog runs on its own battery: a MakerHawk 3000 mAh 1S LiPo already on
