@@ -68,6 +68,18 @@ Probe tips don't fit 1.27 mm sockets, so do these once the male pins are plugged
 The pins are 1.27 mm apart and VSYS sits right next to GND. Hold the probes steady and
 never let one tip touch two pins.
 
+Learned on the bench (2026-10-06):
+- **Short side of the pin strip goes into the socket**, the long side points up for probes
+  and wires. Press the strip down flat until the plastic spacer sits on the socket housing;
+  a strip that isn't fully seated gives low, jumpy readings (we saw 2.5 V on 3V3 and
+  under 1 V on VSYS before reseating, then 3.3 V and 4.9 V).
+- **A probe tip can look like it's on one pin and be touching four.** At this pitch a
+  tip rests on a neighbor in the same row and the row beside it. Watch the tip itself,
+  not the meter, and check with the black lead clipped to a far GND pin so a stray touch
+  can't short two rails.
+- **H2 has VSYS in its left column (row 2) and 3V3 in its right.** 4.9 V there means the
+  left one.
+
 ## GPIO map
 
 | GPIO | Use | Notes |
