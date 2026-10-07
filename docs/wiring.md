@@ -77,6 +77,11 @@ Learned on the bench (2026-10-06):
   tip rests on a neighbor in the same row and the row beside it. Watch the tip itself,
   not the meter, and check with the black lead clipped to a far GND pin so a stray touch
   can't short two rails.
+- **Use the meter's Min/Max (or Hold) with the black lead clipped to a far GND pin.**
+  It keeps the highest reading while you touch down, so a brief contact counts and you
+  can watch the probe tip instead of the display. Clear it before each new pin, or the
+  last pin's higher value sticks. If a number looks too high for the pin (3V3 reading
+  4.9 V), suspect a neighbor touch and retry.
 - **H2 has VSYS in its left column (row 2) and 3V3 in its right.** 4.9 V there means the
   left one.
 
